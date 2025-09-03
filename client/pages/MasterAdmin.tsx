@@ -375,9 +375,37 @@ export default function MasterAdmin() {
               <Download className="h-4 w-4" />
               Export All Data
             </Button>
+            {isGoogleSheetsConfigured && (
+              <Button
+                onClick={syncToGoogleSheets}
+                disabled={syncing}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync to Google Sheets'}
+              </Button>
+            )}
+            {isGoogleSheetsConfigured && spreadsheetInfo.url && (
+              <Button
+                onClick={() => window.open(spreadsheetInfo.url, '_blank')}
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Open Spreadsheet
+              </Button>
+            )}
+            {!isGoogleSheetsConfigured && (
+              <Button
+                onClick={() => alert('Please configure Google Sheets first.\n\n1. Set GOOGLE_SHEET_ID in environment variables\n2. Set GOOGLE_SERVICE_ACCOUNT_CREDENTIALS in environment variables\n3. Share your Google Sheet with the service account email')}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Setup Google Sheets
+              </Button>
+            )}
             <Button
               onClick={loadAllData}
-              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              className="bg-slate-600 hover:bg-slate-700 text-white flex items-center gap-2"
             >
               <Database className="h-4 w-4" />
               Refresh Data
