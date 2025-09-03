@@ -1,226 +1,213 @@
 # Google Sheets Integration Setup Guide
 
-This guide will help you set up automatic syncing between your PC/Laptop management system and Google Sheets.
+This guide will help you set up Google Sheets integration to sync all your master data into organized sub-sheets.
 
-## Overview
+## 📋 Overview
 
-Once configured, your application will automatically:
+The Master Admin page can sync all application data to a Google Sheets document with the following separate sheets:
 
-- ✅ Sync all PC/Laptop configurations to Google Sheets
-- ✅ Create separate sheets for each component category (Mouse, Keyboard, RAM, Storage, etc.)
-- ✅ Update data in real-time when you save changes
-- ✅ Provide a summary sheet with data counts
-- ✅ Allow manual sync and direct access to your Google Sheet
+1. **Summary** - Overview of all data counts and last updated timestamps
+2. **Employees** - Complete HR employee records with personal and work details
+3. **Admin_Users** - System admin accounts and credential status
+4. **Departments** - Department structure with managers and employee counts
+5. **System_Assets** - All hardware inventory (mouse, keyboard, RAM, storage, etc.)
+6. **PC_Laptop_Configs** - Complete system builds with component mapping
+7. **IT_Accounts** - Employee IT credentials and system assignments
+8. **Salary_Records** - Detailed payroll information with calculations
+9. **Leave_Requests** - Employee leave status and approvals
+10. **IT_Notifications** - Pending IT setup requests
+11. **Attendance_Records** - Employee attendance tracking
 
-## Prerequisites
+## 🚀 Setup Instructions
 
-- Google Cloud Console account
-- Admin access to your deployment environment
-- Basic understanding of environment variables
+### Step 1: Create a Google Cloud Project
 
-## Step 1: Create Google Service Account
-
-1. **Go to Google Cloud Console**
-   - Visit: https://console.cloud.google.com/
-   - Create a new project or select existing project
-
-2. **Enable Google Sheets API**
-   - Go to "APIs & Services" → "Library"
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google Sheets API:
+   - Go to "APIs & Services" > "Library"
    - Search for "Google Sheets API"
    - Click "Enable"
 
-3. **Create Service Account**
-   - Go to "IAM & Admin" → "Service Accounts"
-   - Click "Create Service Account"
-   - Enter name: `pc-laptop-sheets-sync`
-   - Enter description: `Service account for PC/Laptop management system`
-   - Click "Create and Continue"
+### Step 2: Create a Service Account
 
-4. **Download Credentials**
-   - Click on your newly created service account
-   - Go to "Keys" tab
-   - Click "Add Key" → "Create new key"
-   - Select "JSON" format
-   - Download the JSON file
-   - **Keep this file secure and never commit it to version control**
+1. In Google Cloud Console, go to "APIs & Services" > "Credentials"
+2. Click "Create Credentials" > "Service Account"
+3. Fill in the service account details:
+   - **Name**: `master-admin-sheets-sync`
+   - **Description**: `Service account for syncing master admin data to Google Sheets`
+4. Click "Create and Continue"
+5. Skip granting access to project (click "Continue")
+6. Skip granting user access (click "Done")
 
-## Step 2: Create Google Sheet
+### Step 3: Generate Service Account Key
 
-1. **Create New Sheet**
-   - Go to https://sheets.google.com/
-   - Create a new Google Sheet
-   - Name it something like "PC Laptop Assets Management"
+1. Click on the created service account
+2. Go to the "Keys" tab
+3. Click "Add Key" > "Create new key"
+4. Select "JSON" format
+5. Click "Create" - this will download a JSON file
+6. **Important**: Keep this file secure and never commit it to your repository
 
-2. **Share with Service Account**
-   - Copy the `client_email` from your downloaded JSON credentials
-   - Click "Share" button in your Google Sheet
-   - Paste the service account email
-   - Set permission to "Editor"
-   - Uncheck "Notify people"
-   - Click "Send"
+### Step 4: Create Google Sheets Document
 
-3. **Get Sheet ID**
-   - Copy the Sheet ID from the URL
-   - Example: `https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit`
-   - Sheet ID is: `1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms`
+1. Go to [Google Sheets](https://sheets.google.com)
+2. Create a new blank spreadsheet
+3. Give it a meaningful name like "Master Admin Data Sync"
+4. Copy the spreadsheet ID from the URL:
+   ```
+   https://docs.google.com/spreadsheets/d/SPREADSHEET_ID_HERE/edit
+   ```
 
-## Step 3: Configure Environment Variables
+### Step 5: Share Spreadsheet with Service Account
 
-Add these environment variables to your deployment platform:
+1. In your Google Sheets document, click "Share"
+2. Add the service account email (found in the JSON file as `client_email`)
+3. Give it "Editor" permissions
+4. Click "Send"
 
-### Required Variables:
+### Step 6: Configure Environment Variables
 
-```bash
-GOOGLE_SHEET_ID=your_google_sheet_id_here
-GOOGLE_SERVICE_ACCOUNT_CREDENTIALS={"type":"service_account","project_id":"your-project-id",...}
-```
+Add these environment variables to your application:
 
-### Platform-Specific Instructions:
+#### Using Builder.io Environment Variables:
 
-#### **Netlify**
-
-1. Go to your site dashboard
-2. Navigate to "Site settings" → "Environment variables"
-3. Add both variables
-4. Redeploy your site
-
-#### **Vercel**
-
-1. Go to your project dashboard
-2. Navigate to "Settings" → "Environment Variables"
-3. Add both variables
-4. Redeploy your project
-
-#### **Railway**
-
-1. Go to your project dashboard
-2. Navigate to "Variables" tab
-3. Add both variables
-4. Railway will auto-redeploy
-
-#### **Heroku**
-
-1. Go to your app dashboard
-2. Navigate to "Settings" → "Config Vars"
-3. Add both variables
-4. Restart your dynos
-
-#### **Docker/VPS**
-
-Add to your `.env` file or docker-compose.yml:
+1. Click the "Dev Server Control" button
+2. Use `set_env_variable` to add:
 
 ```bash
-GOOGLE_SHEET_ID=your_google_sheet_id_here
-GOOGLE_SERVICE_ACCOUNT_CREDENTIALS='{"type":"service_account","project_id":"your-project-id",...}'
+GOOGLE_SHEET_ID=your_spreadsheet_id_here
+GOOGLE_SERVICE_ACCOUNT_CREDENTIALS={"type":"service_account","project_id":"..."}
 ```
 
-## Step 4: Format Service Account Credentials
+#### Or using .env file (local development):
 
-The `GOOGLE_SERVICE_ACCOUNT_CREDENTIALS` should be the entire JSON file content as a single line string:
-
-### Example Format:
-
-```json
-{
-  "type": "service_account",
-  "project_id": "your-project-123",
-  "private_key_id": "abc123",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANB...",
-  "client_email": "pc-laptop-sheets-sync@your-project-123.iam.gserviceaccount.com",
-  "client_id": "123456789",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/pc-laptop-sheets-sync%40your-project-123.iam.gserviceaccount.com"
-}
+```env
+GOOGLE_SHEET_ID=1ABC123def456ghi789jkl0mn_your_actual_spreadsheet_id
+GOOGLE_SERVICE_ACCOUNT_CREDENTIALS={"type":"service_account","project_id":"your-project","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n","client_email":"master-admin-sheets-sync@your-project.iam.gserviceaccount.com","client_id":"123456789","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/master-admin-sheets-sync%40your-project.iam.gserviceaccount.com"}
 ```
 
-**Important:** Make sure the JSON is properly escaped if your platform requires it.
+**⚠️ Security Note**:
 
-## Step 5: Test Configuration
+- The entire JSON content should be on one line for the environment variable
+- Never commit credentials to your repository
+- Use environment variables or secure credential storage
 
-1. **Redeploy your application** after adding environment variables
-2. **Navigate to Google Sheets Config page** in your app
-3. **Click "Check Configuration"** to verify setup
-4. **Click "Test Sync"** to sync your current data
-5. **Check your Google Sheet** to confirm data appears
+### Step 7: Test the Integration
 
-## Features After Setup
+1. Restart your development server if needed
+2. Go to the Master Admin page (`/master-admin`)
+3. Check the "Google Sheets Integration Status" card
+4. If configured correctly, you should see "Connected" status
+5. Click "Sync All Data" to perform your first sync
+6. Open your Google Sheets document to verify the data
 
-### Automatic Syncing
+## 📊 Data Organization
 
-- Data syncs automatically when you save PC/Laptop configurations
-- Updates happen within 2 seconds of saving changes
-- No manual intervention required
+When you sync, the following sheets will be created/updated:
 
-### Manual Sync Options
+### Summary Sheet
 
-- "Sync to Sheets" button on PC/Laptop Info page
-- "Export All Data" with direct Sheet sync on System Info page
-- Manual sync button on Google Sheets Config page
+- Data type counts
+- Last updated timestamps
+- Quick overview of all records
 
-### Sheet Organization
+### Employees Sheet
 
-Your Google Sheet will contain these tabs:
+- Complete employee records
+- Personal information (name, contact, family details)
+- Work information (department, position, salary)
+- Document status and dates
 
-- **PC-Laptop Info**: Complete PC configurations with component details
-- **All System Assets**: Master list of all hardware assets
-- **Category Sheets**: Mouse, Keyboard, Motherboard, RAM, Storage, etc.
-- **Summary**: Data counts and overview
+### System Assets Sheet
 
-### Direct Access
+- Hardware inventory with specifications
+- Warranty and purchase information
+- Category-specific details (RAM size, storage capacity, etc.)
+- Vonage phone system details
 
-- "View Sheets" button opens your Google Sheet directly
-- Real-time collaboration with your team
-- Standard Google Sheets features (charts, filters, sharing, etc.)
+### PC/Laptop Configurations Sheet
 
-## Troubleshooting
+- Complete system builds
+- Component mapping with asset details
+- Hardware combinations and configurations
 
-### Common Issues:
+### IT Accounts Sheet
 
-1. **"Google Sheets is not configured" error**
-   - Check that environment variables are set correctly
-   - Verify the service account email has Editor access to your sheet
-   - Ensure your deployment restarted after adding variables
+- Employee IT credentials (emails masked in sheets)
+- System assignments
+- Software licenses and access details
 
-2. **"Authentication failed" error**
-   - Verify the JSON credentials format
-   - Check that the project ID matches
-   - Ensure the private key is properly formatted
+### Salary Records Sheet
 
-3. **"Sheet not found" error**
-   - Verify the Sheet ID is correct
-   - Confirm the service account has access to the sheet
-   - Check that the sheet wasn't deleted or moved
+- Detailed payroll calculations
+- Working days and attendance factors
+- Bonus and deduction breakdowns
 
-4. **"Permission denied" error**
-   - Service account needs Editor permissions
-   - Re-share the sheet with the service account email
-   - Check that the service account is active
+### Other Supporting Sheets
 
-### Getting Help:
+- Departments, Leave Requests, IT Notifications, Attendance Records
 
-1. **Check Browser Console**: Look for detailed error messages
-2. **Verify Configuration**: Use the "Check Configuration" button
-3. **Test Step by Step**: Follow each setup step carefully
-4. **Check Environment Variables**: Ensure they're properly set in your deployment
+## 🔧 Troubleshooting
 
-## Security Notes
+### "Not Configured" Status
 
-- ✅ Service account credentials are stored securely as environment variables
-- ✅ No sensitive data is logged in the application
-- ✅ Only authorized service accounts can access your sheets
-- ✅ Data transmission uses HTTPS encryption
-- ❌ Never commit service account JSON files to version control
-- ❌ Don't share service account credentials in plain text
+- Check environment variables are set correctly
+- Verify spreadsheet ID is correct
+- Ensure service account JSON is valid
 
-## Support
+### "Permission Denied" Errors
+
+- Check if spreadsheet is shared with service account email
+- Verify service account has "Editor" permissions
+- Confirm Google Sheets API is enabled
+
+### "Spreadsheet Not Found" Errors
+
+- Verify the spreadsheet ID in the environment variable
+- Ensure the spreadsheet exists and is accessible
+- Check the URL format is correct
+
+### Sync Errors
+
+- Check server logs for detailed error messages
+- Verify all required data fields are present
+- Ensure stable internet connection
+
+## 🔄 Regular Sync Workflow
+
+1. **Manual Sync**: Use "Sync All Data" button in Master Admin
+2. **Monitor Status**: Check the integration status card
+3. **Verify Data**: Open spreadsheet to confirm data accuracy
+4. **Troubleshoot**: Use setup instructions if issues arise
+
+## 📱 Features
+
+- **Automatic Sheet Creation**: All necessary sheets are created automatically
+- **Data Validation**: Cross-references between related records
+- **Comprehensive Coverage**: All application data is included
+- **Real-time Status**: Live configuration and sync status
+- **Error Handling**: Detailed error messages for troubleshooting
+- **Batch Updates**: Efficient bulk data synchronization
+
+## 🛡️ Security Best Practices
+
+1. **Never commit credentials** to version control
+2. **Use environment variables** for all sensitive data
+3. **Regularly rotate** service account keys
+4. **Monitor access** to your Google Sheets document
+5. **Limit permissions** to only what's necessary
+
+---
+
+## 🆘 Support
 
 If you encounter issues:
 
-1. Review this guide step by step
-2. Check the Google Sheets Config page for status information
-3. Verify your Google Cloud Console setup
-4. Ensure environment variables are properly configured in your deployment platform
+1. Check the Google Sheets Integration Status card in Master Admin
+2. Review server logs for detailed error messages
+3. Verify all environment variables are set correctly
+4. Ensure Google Sheets API is enabled in your project
+5. Confirm service account has proper permissions
 
-Once configured, your PC/Laptop management system will seamlessly sync with Google Sheets, providing real-time data access and collaboration capabilities!
+Your master data will be organized in professional spreadsheet format with automatic updates whenever you sync!

@@ -1,385 +1,668 @@
-import { google } from "googleapis";
 import { RequestHandler } from "express";
+import { google } from "googleapis";
 
-// Google Sheets service class
-export class GoogleSheetsService {
-  private sheets: any;
-  private auth: any;
-  private spreadsheetId: string;
+// Google Sheets API configuration
+const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 
-  constructor() {
-    this.spreadsheetId = process.env.GOOGLE_SHEET_ID || "";
-  }
+interface MasterData {
+  adminUsers: Array<{
+    id: string;
+    username: string;
+    createdAt: string;
+  }>;
+  userCredentials: Record<string, string>;
+  employees: Array<{
+    id: string;
+    employeeId: string;
+    fullName: string;
+    email: string;
+    mobileNumber: string;
+    department: string;
+    position: string;
+    tableNumber: string;
+    salary: string;
+    status: "active" | "inactive";
+    joiningDate: string;
+    createdAt: string;
+    fatherName?: string;
+    motherName?: string;
+    birthDate?: string;
+    bloodGroup?: string;
+    emergencyMobileNumber?: string;
+    alternativeMobileNumber?: string;
+    address?: string;
+    permanentAddress?: string;
+    accountNumber?: string;
+    ifscCode?: string;
+    aadhaarNumber?: string;
+    panNumber?: string;
+    uanNumber?: string;
+  }>;
+  departments: Array<{
+    id: string;
+    name: string;
+    manager: string;
+    employeeCount: number;
+  }>;
+  leaveRequests: Array<{
+    id: string;
+    employeeName: string;
+    leaveType: string;
+    startDate: string;
+    endDate: string;
+    status: "pending" | "approved" | "rejected";
+    reason: string;
+  }>;
+  attendanceRecords: Array<{
+    employeeId: string;
+    date: string;
+    present: boolean;
+    checkIn?: string;
+    checkOut?: string;
+    notes?: string;
+  }>;
+  systemAssets: Array<{
+    id: string;
+    category: string;
+    serialNumber: string;
+    vendorName: string;
+    companyName?: string;
+    purchaseDate: string;
+    warrantyEndDate: string;
+    ramSize?: string;
+    ramType?: string;
+    processorModel?: string;
+    storageType?: string;
+    storageCapacity?: string;
+    vonageNumber?: string;
+    vonageExtCode?: string;
+    vonagePassword?: string;
+    createdAt: string;
+  }>;
+  pcLaptopAssets: Array<{
+    id: string;
+    createdAt: string;
+    mouseId?: string;
+    keyboardId?: string;
+    motherboardId?: string;
+    cameraId?: string;
+    headphoneId?: string;
+    powerSupplyId?: string;
+    storageId?: string;
+    ramId?: string;
+    ramId2?: string;
+  }>;
+  itAccounts: Array<{
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    systemId: string;
+    tableNumber: string;
+    department: string;
+    emails: Array<{
+      provider: string;
+      email: string;
+      password: string;
+    }>;
+    vitelGlobal: {
+      id: string;
+      provider: "vitel" | "vonage";
+    };
+    lmPlayer: {
+      id: string;
+      password: string;
+      license: string;
+    };
+    createdAt: string;
+  }>;
+  salaryRecords: Array<{
+    id: string;
+    employeeId: string;
+    month: string;
+    year: number;
+    totalWorkingDays: number;
+    actualWorkingDays: number;
+    basicSalary: number;
+    bonus?: number;
+    deductions?: number;
+    totalSalary: number;
+    paymentDate?: string;
+    notes?: string;
+    createdAt: string;
+  }>;
+  pendingITNotifications: Array<{
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    department: string;
+    tableNumber: string;
+    email: string;
+    createdAt: string;
+    processed: boolean;
+  }>;
+}
 
-  // Initialize Google Sheets API with service account
-  async initializeAuth() {
-    try {
-      // Use service account credentials from environment
-      const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS;
-      if (!credentials) {
-        throw new Error("Google Service Account credentials not found");
-      }
-
-      const serviceAccount = JSON.parse(credentials);
-
-      this.auth = new google.auth.GoogleAuth({
-        credentials: serviceAccount,
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-      });
-
-      this.sheets = google.sheets({ version: "v4", auth: this.auth });
-      return true;
-    } catch (error) {
-      console.error("Failed to initialize Google Sheets auth:", error);
-      return false;
+// Helper function to get Google Sheets API client
+async function getGoogleSheetsClient() {
+  try {
+    const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS;
+    if (!credentials) {
+      throw new Error(
+        "GOOGLE_SERVICE_ACCOUNT_CREDENTIALS environment variable not set",
+      );
     }
-  }
 
-  // Create spreadsheet if it doesn't exist
-  async createSpreadsheet() {
-    try {
-      if (!this.sheets) {
-        await this.initializeAuth();
-      }
+    const serviceAccount = JSON.parse(credentials);
+    const auth = new google.auth.GoogleAuth({
+      credentials: serviceAccount,
+      scopes: SCOPES,
+    });
 
-      const response = await this.sheets.spreadsheets.create({
-        resource: {
-          properties: {
-            title: `PC_Laptop_Assets_${new Date().toISOString().split("T")[0]}`,
-          },
-          sheets: [
-            { properties: { title: "PC-Laptop Info" } },
-            { properties: { title: "All System Assets" } },
-            { properties: { title: "Mouse" } },
-            { properties: { title: "Keyboard" } },
-            { properties: { title: "Motherboard" } },
-            { properties: { title: "RAM" } },
-            { properties: { title: "Storage" } },
-            { properties: { title: "Camera" } },
-            { properties: { title: "Headphone" } },
-            { properties: { title: "Power Supply" } },
-            { properties: { title: "Monitor" } },
-            { properties: { title: "Vonage" } },
-            { properties: { title: "Summary" } },
-          ],
-        },
-      });
-
-      this.spreadsheetId = response.data.spreadsheetId!;
-      return response.data.spreadsheetId;
-    } catch (error) {
-      console.error("Failed to create spreadsheet:", error);
-      throw error;
-    }
-  }
-
-  // Update or create sheet with data
-  async updateSheet(sheetName: string, data: any[], headers: string[]) {
-    try {
-      if (!this.sheets) {
-        await this.initializeAuth();
-      }
-
-      // Clear existing data
-      await this.sheets.spreadsheets.values.clear({
-        spreadsheetId: this.spreadsheetId,
-        range: `${sheetName}!A:Z`,
-      });
-
-      // Prepare data with headers
-      const values = [
-        headers,
-        ...data.map((item) => headers.map((header) => item[header] || "-")),
-      ];
-
-      // Update sheet with new data
-      const response = await this.sheets.spreadsheets.values.update({
-        spreadsheetId: this.spreadsheetId,
-        range: `${sheetName}!A1`,
-        valueInputOption: "RAW",
-        resource: {
-          values,
-        },
-      });
-
-      return response.data;
-    } catch (error) {
-      console.error(`Failed to update sheet ${sheetName}:`, error);
-      throw error;
-    }
-  }
-
-  // Sync all data to Google Sheets
-  async syncAllData(pcLaptopData: any[], systemAssetsData: any[]) {
-    try {
-      if (!this.spreadsheetId) {
-        await this.createSpreadsheet();
-      }
-
-      // 1. PC/Laptop Info Sheet
-      const pcLaptopSheet = pcLaptopData.map((item: any) => {
-        // Get storage details
-        const storageDetails = item.storageId
-          ? systemAssetsData.find((s: any) => s.id === item.storageId)
-          : null;
-
-        // Get RAM details
-        const ram1Details = item.ramId
-          ? systemAssetsData.find((s: any) => s.id === item.ramId)
-          : null;
-        const ram2Details = item.ramId2
-          ? systemAssetsData.find((s: any) => s.id === item.ramId2)
-          : null;
-
-        // Calculate total RAM
-        let totalRam = 0;
-        if (ram1Details?.ramSize) {
-          totalRam += parseInt(ram1Details.ramSize.replace(/[^0-9]/g, "")) || 0;
-        }
-        if (ram2Details?.ramSize) {
-          totalRam += parseInt(ram2Details.ramSize.replace(/[^0-9]/g, "")) || 0;
-        }
-
-        return {
-          "PC/Laptop ID": item.id,
-          "Mouse ID": item.mouseId || "-",
-          "Keyboard ID": item.keyboardId || "-",
-          "Motherboard ID": item.motherboardId || "-",
-          "Camera ID": item.cameraId || "-",
-          "Headphone ID": item.headphoneId || "-",
-          "Power Supply ID": item.powerSupplyId || "-",
-          "Storage ID": item.storageId || "-",
-          "Storage Type": storageDetails?.storageType || "-",
-          "Storage Capacity": storageDetails?.storageCapacity || "-",
-          "RAM Slot 1 ID": item.ramId || "-",
-          "RAM Slot 1 Size": ram1Details?.ramSize || "-",
-          "RAM Slot 2 ID": item.ramId2 || "-",
-          "RAM Slot 2 Size": ram2Details?.ramSize || "-",
-          "Total RAM": totalRam > 0 ? `${totalRam}GB` : "-",
-          "Created Date": new Date(item.createdAt).toLocaleDateString(),
-        };
-      });
-
-      await this.updateSheet("PC-Laptop Info", pcLaptopSheet, [
-        "PC/Laptop ID",
-        "Mouse ID",
-        "Keyboard ID",
-        "Motherboard ID",
-        "Camera ID",
-        "Headphone ID",
-        "Power Supply ID",
-        "Storage ID",
-        "Storage Type",
-        "Storage Capacity",
-        "RAM Slot 1 ID",
-        "RAM Slot 1 Size",
-        "RAM Slot 2 ID",
-        "RAM Slot 2 Size",
-        "Total RAM",
-        "Created Date",
-      ]);
-
-      // 2. All System Assets Sheet
-      const allAssetsSheet = systemAssetsData.map((asset: any) => ({
-        "Asset ID": asset.id,
-        Category: asset.category,
-        "Serial Number": asset.serialNumber || "-",
-        "Vendor Name": asset.vendorName || "-",
-        "Company Name": asset.companyName || "-",
-        "Purchase Date": asset.purchaseDate
-          ? new Date(asset.purchaseDate).toLocaleDateString()
-          : "-",
-        "Warranty End Date": asset.warrantyEndDate
-          ? new Date(asset.warrantyEndDate).toLocaleDateString()
-          : "-",
-        "RAM Size": asset.ramSize || "-",
-        "RAM Type": asset.ramType || "-",
-        "Processor Model": asset.processorModel || "-",
-        "Storage Type": asset.storageType || "-",
-        "Storage Capacity": asset.storageCapacity || "-",
-        "Vonage Number": asset.vonageNumber || "-",
-        "Extension Code": asset.vonageExtCode || "-",
-        Password: asset.vonagePassword || "-",
-        "Created Date": new Date(asset.createdAt).toLocaleDateString(),
-      }));
-
-      await this.updateSheet("All System Assets", allAssetsSheet, [
-        "Asset ID",
-        "Category",
-        "Serial Number",
-        "Vendor Name",
-        "Company Name",
-        "Purchase Date",
-        "Warranty End Date",
-        "RAM Size",
-        "RAM Type",
-        "Processor Model",
-        "Storage Type",
-        "Storage Capacity",
-        "Vonage Number",
-        "Extension Code",
-        "Password",
-        "Created Date",
-      ]);
-
-      // 3. Category-specific sheets
-      const categories = [
-        { name: "Mouse", category: "mouse" },
-        { name: "Keyboard", category: "keyboard" },
-        { name: "Motherboard", category: "motherboard" },
-        { name: "RAM", category: "ram" },
-        { name: "Storage", category: "storage" },
-        { name: "Camera", category: "camera" },
-        { name: "Headphone", category: "headphone" },
-        { name: "Power Supply", category: "power-supply" },
-        { name: "Monitor", category: "monitor" },
-        { name: "Vonage", category: "vonage" },
-      ];
-
-      for (const { name, category } of categories) {
-        const categoryData = systemAssetsData
-          .filter((asset: any) => asset.category === category)
-          .map((asset: any) => {
-            const baseData = {
-              "Asset ID": asset.id,
-              "Serial Number": asset.serialNumber || "-",
-              "Vendor Name": asset.vendorName || "-",
-              "Company Name": asset.companyName || "-",
-              "Purchase Date": asset.purchaseDate
-                ? new Date(asset.purchaseDate).toLocaleDateString()
-                : "-",
-              "Warranty End Date": asset.warrantyEndDate
-                ? new Date(asset.warrantyEndDate).toLocaleDateString()
-                : "-",
-              "Created Date": new Date(asset.createdAt).toLocaleDateString(),
-            };
-
-            // Add category-specific fields
-            if (category === "ram") {
-              return {
-                ...baseData,
-                "RAM Size": asset.ramSize || "-",
-                "RAM Type": asset.ramType || "-",
-              };
-            } else if (category === "motherboard") {
-              return {
-                ...baseData,
-                "Processor Model": asset.processorModel || "-",
-              };
-            } else if (category === "storage") {
-              return {
-                ...baseData,
-                "Storage Type": asset.storageType || "-",
-                "Storage Capacity": asset.storageCapacity || "-",
-              };
-            } else if (category === "vonage") {
-              return {
-                ...baseData,
-                "Vonage Number": asset.vonageNumber || "-",
-                "Extension Code": asset.vonageExtCode || "-",
-                Password: asset.vonagePassword || "-",
-              };
-            }
-
-            return baseData;
-          });
-
-        if (categoryData.length > 0) {
-          let headers = [
-            "Asset ID",
-            "Serial Number",
-            "Vendor Name",
-            "Company Name",
-            "Purchase Date",
-            "Warranty End Date",
-            "Created Date",
-          ];
-
-          if (category === "ram") {
-            headers.push("RAM Size", "RAM Type");
-          } else if (category === "motherboard") {
-            headers.push("Processor Model");
-          } else if (category === "storage") {
-            headers.push("Storage Type", "Storage Capacity");
-          } else if (category === "vonage") {
-            headers.push("Vonage Number", "Extension Code", "Password");
-          }
-
-          await this.updateSheet(name, categoryData, headers);
-        }
-      }
-
-      // 4. Summary Sheet
-      const summaryData = [
-        { "Data Type": "Total PC/Laptops", Count: pcLaptopData.length },
-        { "Data Type": "Total System Assets", Count: systemAssetsData.length },
-        ...categories.map(({ name, category }) => ({
-          "Data Type": `${name} Assets`,
-          Count: systemAssetsData.filter(
-            (asset: any) => asset.category === category,
-          ).length,
-        })),
-      ];
-
-      await this.updateSheet("Summary", summaryData, ["Data Type", "Count"]);
-
-      return { success: true, spreadsheetId: this.spreadsheetId };
-    } catch (error) {
-      console.error("Failed to sync data to Google Sheets:", error);
-      throw error;
-    }
-  }
-
-  // Get spreadsheet URL
-  getSpreadsheetUrl() {
-    return `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/edit`;
+    const authClient = await auth.getClient();
+    return google.sheets({ version: "v4", auth: authClient });
+  } catch (error) {
+    console.error("Error creating Google Sheets client:", error);
+    throw error;
   }
 }
 
-// Create global instance
-const googleSheetsService = new GoogleSheetsService();
+// Helper function to find asset details by ID
+function findAssetDetails(systemAssets: any[], assetId: string) {
+  const asset = systemAssets.find((a) => a.id === assetId);
+  if (!asset) return assetId;
 
-// API route handlers
-export const syncToGoogleSheets: RequestHandler = async (req, res) => {
+  let details = `${assetId} (${asset.vendorName}`;
+  if (asset.ramSize) details += ` - ${asset.ramSize}`;
+  if (asset.storageType && asset.storageCapacity)
+    details += ` - ${asset.storageType} ${asset.storageCapacity}`;
+  details += ")";
+  return details;
+}
+
+// Helper function to find employee name by ID
+function findEmployeeName(employees: any[], employeeId: string) {
+  const employee = employees.find((e) => e.id === employeeId);
+  return employee ? employee.fullName : employeeId;
+}
+
+// Main sync function
+export const syncMasterDataToGoogleSheets: RequestHandler = async (
+  req,
+  res,
+) => {
   try {
-    const { pcLaptopData, systemAssetsData } = req.body;
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    if (!spreadsheetId) {
+      return res.status(400).json({
+        success: false,
+        error: "GOOGLE_SHEET_ID environment variable not set",
+      });
+    }
 
-    const result = await googleSheetsService.syncAllData(
-      pcLaptopData,
-      systemAssetsData,
-    );
+    const { masterData }: { masterData: MasterData } = req.body;
+    if (!masterData) {
+      return res.status(400).json({
+        success: false,
+        error: "Master data is required",
+      });
+    }
+
+    const sheets = await getGoogleSheetsClient();
+
+    // 1. Create/Update Employees Sheet
+    const employeesData = [
+      [
+        "Employee ID",
+        "Full Name",
+        "Email",
+        "Mobile",
+        "Department",
+        "Position",
+        "Table No.",
+        "Salary",
+        "Status",
+        "Joining Date",
+        "Father Name",
+        "Mother Name",
+        "Birth Date",
+        "Blood Group",
+        "Emergency Mobile",
+        "Address",
+        "Account Number",
+        "IFSC Code",
+        "Aadhaar Number",
+        "PAN Number",
+        "UAN Number",
+        "Created Date",
+      ],
+      ...masterData.employees.map((emp) => [
+        emp.employeeId,
+        emp.fullName,
+        emp.email,
+        emp.mobileNumber,
+        emp.department,
+        emp.position,
+        emp.tableNumber,
+        emp.salary,
+        emp.status,
+        new Date(emp.joiningDate).toLocaleDateString(),
+        emp.fatherName || "",
+        emp.motherName || "",
+        emp.birthDate || "",
+        emp.bloodGroup || "",
+        emp.emergencyMobileNumber || "",
+        emp.address || "",
+        emp.accountNumber || "",
+        emp.ifscCode || "",
+        emp.aadhaarNumber || "",
+        emp.panNumber || "",
+        emp.uanNumber || "",
+        new Date(emp.createdAt).toLocaleDateString(),
+      ]),
+    ];
+
+    // 2. Create/Update Admin Users Sheet
+    const adminUsersData = [
+      ["ID", "Username", "Has Password", "Created Date"],
+      ...masterData.adminUsers.map((user) => [
+        user.id,
+        user.username,
+        masterData.userCredentials[user.username] ? "Yes" : "No",
+        new Date(user.createdAt).toLocaleDateString(),
+      ]),
+    ];
+
+    // 3. Create/Update Departments Sheet
+    const departmentsData = [
+      ["ID", "Department Name", "Manager", "Employee Count"],
+      ...masterData.departments.map((dept) => [
+        dept.id,
+        dept.name,
+        dept.manager,
+        dept.employeeCount.toString(),
+      ]),
+    ];
+
+    // 4. Create/Update System Assets Sheet
+    const systemAssetsData = [
+      [
+        "Asset ID",
+        "Category",
+        "Vendor",
+        "Serial Number",
+        "Company",
+        "Purchase Date",
+        "Warranty End",
+        "RAM Size",
+        "RAM Type",
+        "Processor",
+        "Storage Type",
+        "Storage Capacity",
+        "Vonage Number",
+        "Vonage Ext",
+        "Created Date",
+      ],
+      ...masterData.systemAssets.map((asset) => [
+        asset.id,
+        asset.category,
+        asset.vendorName,
+        asset.serialNumber,
+        asset.companyName || "",
+        new Date(asset.purchaseDate).toLocaleDateString(),
+        new Date(asset.warrantyEndDate).toLocaleDateString(),
+        asset.ramSize || "",
+        asset.ramType || "",
+        asset.processorModel || "",
+        asset.storageType || "",
+        asset.storageCapacity || "",
+        asset.vonageNumber || "",
+        asset.vonageExtCode || "",
+        new Date(asset.createdAt).toLocaleDateString(),
+      ]),
+    ];
+
+    // 5. Create/Update PC/Laptop Configurations Sheet
+    const pcLaptopData = [
+      [
+        "PC/Laptop ID",
+        "Mouse",
+        "Keyboard",
+        "Motherboard",
+        "Camera",
+        "Headphone",
+        "Power Supply",
+        "Storage",
+        "RAM Slot 1",
+        "RAM Slot 2",
+        "Created Date",
+      ],
+      ...masterData.pcLaptopAssets.map((pc) => [
+        pc.id,
+        pc.mouseId ? findAssetDetails(masterData.systemAssets, pc.mouseId) : "",
+        pc.keyboardId
+          ? findAssetDetails(masterData.systemAssets, pc.keyboardId)
+          : "",
+        pc.motherboardId
+          ? findAssetDetails(masterData.systemAssets, pc.motherboardId)
+          : "",
+        pc.cameraId
+          ? findAssetDetails(masterData.systemAssets, pc.cameraId)
+          : "",
+        pc.headphoneId
+          ? findAssetDetails(masterData.systemAssets, pc.headphoneId)
+          : "",
+        pc.powerSupplyId
+          ? findAssetDetails(masterData.systemAssets, pc.powerSupplyId)
+          : "",
+        pc.storageId
+          ? findAssetDetails(masterData.systemAssets, pc.storageId)
+          : "",
+        pc.ramId ? findAssetDetails(masterData.systemAssets, pc.ramId) : "",
+        pc.ramId2 ? findAssetDetails(masterData.systemAssets, pc.ramId2) : "",
+        new Date(pc.createdAt).toLocaleDateString(),
+      ]),
+    ];
+
+    // 6. Create/Update IT Accounts Sheet
+    const itAccountsData = [
+      [
+        "Employee Name",
+        "Employee ID",
+        "System ID",
+        "Table No.",
+        "Department",
+        "Email Accounts",
+        "Vitel/Vonage Provider",
+        "Vitel/Vonage ID",
+        "LM Player ID",
+        "LM Player License",
+        "Created Date",
+      ],
+      ...masterData.itAccounts.map((account) => [
+        account.employeeName,
+        account.employeeId,
+        account.systemId,
+        account.tableNumber,
+        account.department,
+        account.emails
+          .map((email) => `${email.provider}: ${email.email}`)
+          .join("; "),
+        account.vitelGlobal.provider,
+        account.vitelGlobal.id,
+        account.lmPlayer.id,
+        account.lmPlayer.license,
+        new Date(account.createdAt).toLocaleDateString(),
+      ]),
+    ];
+
+    // 7. Create/Update Salary Records Sheet
+    const salaryData = [
+      [
+        "Employee Name",
+        "Employee ID",
+        "Month/Year",
+        "Total Working Days",
+        "Actual Working Days",
+        "Basic Salary",
+        "Bonus",
+        "Deductions",
+        "Total Salary",
+        "Payment Date",
+        "Notes",
+        "Created Date",
+      ],
+      ...masterData.salaryRecords.map((salary) => [
+        findEmployeeName(masterData.employees, salary.employeeId),
+        salary.employeeId,
+        `${salary.month} ${salary.year}`,
+        salary.totalWorkingDays.toString(),
+        salary.actualWorkingDays.toString(),
+        salary.basicSalary.toString(),
+        (salary.bonus || 0).toString(),
+        (salary.deductions || 0).toString(),
+        salary.totalSalary.toString(),
+        salary.paymentDate || "",
+        salary.notes || "",
+        new Date(salary.createdAt).toLocaleDateString(),
+      ]),
+    ];
+
+    // 8. Create/Update Leave Requests Sheet
+    const leaveRequestsData = [
+      [
+        "Employee Name",
+        "Leave Type",
+        "Start Date",
+        "End Date",
+        "Status",
+        "Reason",
+      ],
+      ...masterData.leaveRequests.map((leave) => [
+        leave.employeeName,
+        leave.leaveType,
+        new Date(leave.startDate).toLocaleDateString(),
+        new Date(leave.endDate).toLocaleDateString(),
+        leave.status,
+        leave.reason,
+      ]),
+    ];
+
+    // 9. Create/Update Pending IT Notifications Sheet
+    const pendingNotificationsData = [
+      [
+        "Employee Name",
+        "Employee ID",
+        "Department",
+        "Table No.",
+        "Email",
+        "Status",
+        "Created Date",
+      ],
+      ...masterData.pendingITNotifications.map((notification) => [
+        notification.employeeName,
+        notification.employeeId,
+        notification.department,
+        notification.tableNumber,
+        notification.email,
+        notification.processed ? "Processed" : "Pending",
+        new Date(notification.createdAt).toLocaleDateString(),
+      ]),
+    ];
+
+    // 10. Create/Update Attendance Records Sheet
+    const attendanceData = [
+      [
+        "Employee ID",
+        "Employee Name",
+        "Date",
+        "Present",
+        "Check In",
+        "Check Out",
+        "Notes",
+      ],
+      ...masterData.attendanceRecords.map((record) => [
+        record.employeeId,
+        findEmployeeName(masterData.employees, record.employeeId),
+        record.date,
+        record.present ? "Yes" : "No",
+        record.checkIn || "",
+        record.checkOut || "",
+        record.notes || "",
+      ]),
+    ];
+
+    // Prepare batch update requests
+    const requests = [
+      {
+        range: "Employees!A:V",
+        values: employeesData,
+      },
+      {
+        range: "Admin_Users!A:D",
+        values: adminUsersData,
+      },
+      {
+        range: "Departments!A:D",
+        values: departmentsData,
+      },
+      {
+        range: "System_Assets!A:O",
+        values: systemAssetsData,
+      },
+      {
+        range: "PC_Laptop_Configs!A:K",
+        values: pcLaptopData,
+      },
+      {
+        range: "IT_Accounts!A:K",
+        values: itAccountsData,
+      },
+      {
+        range: "Salary_Records!A:L",
+        values: salaryData,
+      },
+      {
+        range: "Leave_Requests!A:F",
+        values: leaveRequestsData,
+      },
+      {
+        range: "IT_Notifications!A:G",
+        values: pendingNotificationsData,
+      },
+      {
+        range: "Attendance_Records!A:G",
+        values: attendanceData,
+      },
+    ];
+
+    // Create summary sheet
+    const summaryData = [
+      ["Data Type", "Count", "Last Updated"],
+      [
+        "Total Employees",
+        masterData.employees.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "Admin Users",
+        masterData.adminUsers.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "Departments",
+        masterData.departments.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "System Assets",
+        masterData.systemAssets.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "PC/Laptop Configurations",
+        masterData.pcLaptopAssets.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "IT Accounts",
+        masterData.itAccounts.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "Salary Records",
+        masterData.salaryRecords.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "Leave Requests",
+        masterData.leaveRequests.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "IT Notifications",
+        masterData.pendingITNotifications.length.toString(),
+        new Date().toLocaleString(),
+      ],
+      [
+        "Attendance Records",
+        masterData.attendanceRecords.length.toString(),
+        new Date().toLocaleString(),
+      ],
+    ];
+
+    requests.push({
+      range: "Summary!A:C",
+      values: summaryData,
+    });
+
+    // Execute batch update
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        valueInputOption: "RAW",
+        data: requests,
+      },
+    });
 
     res.json({
       success: true,
-      message: "Data synced to Google Sheets successfully",
-      spreadsheetUrl: googleSheetsService.getSpreadsheetUrl(),
-      ...result,
+      message: "Master data successfully synced to Google Sheets",
+      sheetsUpdated: requests.length,
+      recordCounts: {
+        employees: masterData.employees.length,
+        adminUsers: masterData.adminUsers.length,
+        departments: masterData.departments.length,
+        systemAssets: masterData.systemAssets.length,
+        pcLaptopConfigs: masterData.pcLaptopAssets.length,
+        itAccounts: masterData.itAccounts.length,
+        salaryRecords: masterData.salaryRecords.length,
+        leaveRequests: masterData.leaveRequests.length,
+        itNotifications: masterData.pendingITNotifications.length,
+        attendanceRecords: masterData.attendanceRecords.length,
+      },
     });
   } catch (error) {
-    console.error("Sync error:", error);
+    console.error("Error syncing to Google Sheets:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to sync to Google Sheets",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: "Failed to sync data to Google Sheets",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };
 
+// Get spreadsheet info
 export const getSpreadsheetInfo: RequestHandler = async (req, res) => {
   try {
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    if (!spreadsheetId) {
+      return res.status(400).json({
+        success: false,
+        error: "GOOGLE_SHEET_ID environment variable not set",
+      });
+    }
+
+    const sheets = await getGoogleSheetsClient();
+    const response = await sheets.spreadsheets.get({
+      spreadsheetId,
+      includeGridData: false,
+    });
+
     res.json({
       success: true,
-      spreadsheetId: googleSheetsService.spreadsheetId,
-      spreadsheetUrl: googleSheetsService.getSpreadsheetUrl(),
-      isConfigured:
-        !!process.env.GOOGLE_SHEET_ID &&
-        !!process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS,
+      title: response.data.properties?.title,
+      url: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
+      sheets: response.data.sheets?.map((sheet) => ({
+        title: sheet.properties?.title,
+        sheetId: sheet.properties?.sheetId,
+      })),
     });
   } catch (error) {
+    console.error("Error getting spreadsheet info:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to get spreadsheet info",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: "Failed to get spreadsheet info",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 };

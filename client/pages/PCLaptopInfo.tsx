@@ -20,18 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import {
-  Edit,
-  Download,
-  RefreshCw,
-  ExternalLink,
-  Settings,
-} from "lucide-react";
-import * as XLSX from "xlsx";
-import {
-  googleAppsScriptSync,
-  useGoogleAppsScriptAutoSync,
-} from "@/lib/googleAppsScriptSync";
+import { Edit } from "lucide-react";
 
 type Asset = {
   id: string;
@@ -96,15 +85,6 @@ export default function PCLaptopInfo() {
     ramId2: "",
   });
   const [totalRam, setTotalRam] = useState("0GB");
-  const [isGoogleSheetsConfigured, setIsGoogleSheetsConfigured] =
-    useState(false);
-  const { triggerAutoSync } = useGoogleAppsScriptAutoSync();
-
-  // Check Google Apps Script configuration on load
-  useEffect(() => {
-    const configured = googleAppsScriptSync.isReady();
-    setIsGoogleSheetsConfigured(configured);
-  }, []);
 
   // Helper function to get used IDs for a specific component type
   const getUsedIds = (items: Asset[], field: keyof Asset): string[] => {
@@ -153,166 +133,6 @@ export default function PCLaptopInfo() {
   useEffect(() => {
     setTotalRam(calculateTotalRam());
   }, [form.ramId, form.ramId2]);
-
-  // Export to Excel function
-  const exportToExcel = () => {
-    try {
-      // Get all data from localStorage
-      const pcLaptopData = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]",
-      );
-      const systemAssetsData = JSON.parse(
-        localStorage.getItem(SYS_STORAGE_KEY) || "[]",
-      );
-
-      // Create a new workbook
-      const workbook = XLSX.utils.book_new();
-
-      // 1. PC/Laptop Info Sheet
-      const pcLaptopSheet = pcLaptopData.map((item: Asset) => {
-        const sysAssets = systemAssetsData;
-
-        // Get storage details
-        const storageDetails = item.storageId
-          ? sysAssets.find((s: any) => s.id === item.storageId)
-          : null;
-
-        // Get RAM details
-        const ram1Details = item.ramId
-          ? sysAssets.find((s: any) => s.id === item.ramId)
-          : null;
-        const ram2Details = (item as any).ramId2
-          ? sysAssets.find((s: any) => s.id === (item as any).ramId2)
-          : null;
-
-        // Calculate total RAM
-        let totalRam = 0;
-        if (ram1Details?.ramSize) {
-          totalRam += parseInt(ram1Details.ramSize.replace(/[^0-9]/g, "")) || 0;
-        }
-        if (ram2Details?.ramSize) {
-          totalRam += parseInt(ram2Details.ramSize.replace(/[^0-9]/g, "")) || 0;
-        }
-
-        return {
-          "PC/Laptop ID": item.id,
-          "Mouse ID": item.mouseId || "-",
-          "Keyboard ID": item.keyboardId || "-",
-          "Motherboard ID": item.motherboardId || "-",
-          "Camera ID": item.cameraId || "-",
-          "Headphone ID": item.headphoneId || "-",
-          "Power Supply ID": item.powerSupplyId || "-",
-          "Storage ID": item.storageId || "-",
-          "Storage Type": storageDetails?.storageType || "-",
-          "Storage Capacity": storageDetails?.storageCapacity || "-",
-          "RAM Slot 1 ID": item.ramId || "-",
-          "RAM Slot 1 Size": ram1Details?.ramSize || "-",
-          "RAM Slot 2 ID": (item as any).ramId2 || "-",
-          "RAM Slot 2 Size": ram2Details?.ramSize || "-",
-          "Total RAM": totalRam > 0 ? `${totalRam}GB` : "-",
-          "Created Date": new Date(item.createdAt).toLocaleDateString(),
-        };
-      });
-
-      const pcLaptopWS = XLSX.utils.json_to_sheet(pcLaptopSheet);
-      XLSX.utils.book_append_sheet(workbook, pcLaptopWS, "PC-Laptop Info");
-
-      // 2. Create sheets for each asset category
-      const categories = [
-        { name: "Mouse", category: "mouse" },
-        { name: "Keyboard", category: "keyboard" },
-        { name: "Motherboard", category: "motherboard" },
-        { name: "RAM", category: "ram" },
-        { name: "Storage", category: "storage" },
-        { name: "Camera", category: "camera" },
-        { name: "Headphone", category: "headphone" },
-        { name: "Power Supply", category: "power-supply" },
-        { name: "Monitor", category: "monitor" },
-        { name: "Vonage", category: "vonage" },
-      ];
-
-      categories.forEach(({ name, category }) => {
-        const categoryData = systemAssetsData
-          .filter((asset: any) => asset.category === category)
-          .map((asset: any) => {
-            const baseData = {
-              "Asset ID": asset.id,
-              Category: asset.category,
-              "Serial Number": asset.serialNumber || "-",
-              "Vendor Name": asset.vendorName || "-",
-              "Company Name": asset.companyName || "-",
-              "Purchase Date": asset.purchaseDate
-                ? new Date(asset.purchaseDate).toLocaleDateString()
-                : "-",
-              "Warranty End Date": asset.warrantyEndDate
-                ? new Date(asset.warrantyEndDate).toLocaleDateString()
-                : "-",
-              "Created Date": new Date(asset.createdAt).toLocaleDateString(),
-            };
-
-            // Add category-specific fields
-            if (category === "ram") {
-              return {
-                ...baseData,
-                "RAM Size": asset.ramSize || "-",
-                "RAM Type": asset.ramType || "-",
-              };
-            } else if (category === "motherboard") {
-              return {
-                ...baseData,
-                "Processor Model": asset.processorModel || "-",
-              };
-            } else if (category === "storage") {
-              return {
-                ...baseData,
-                "Storage Type": asset.storageType || "-",
-                "Storage Capacity": asset.storageCapacity || "-",
-              };
-            } else if (category === "vonage") {
-              return {
-                ...baseData,
-                "Vonage Number": asset.vonageNumber || "-",
-                "Extension Code": asset.vonageExtCode || "-",
-                Password: asset.vonagePassword || "-",
-              };
-            }
-
-            return baseData;
-          });
-
-        if (categoryData.length > 0) {
-          const categoryWS = XLSX.utils.json_to_sheet(categoryData);
-          XLSX.utils.book_append_sheet(workbook, categoryWS, name);
-        }
-      });
-
-      // 3. Summary Sheet
-      const summaryData = [
-        { "Data Type": "Total PC/Laptops", Count: pcLaptopData.length },
-        ...categories.map(({ name, category }) => ({
-          "Data Type": `Total ${name}`,
-          Count: systemAssetsData.filter(
-            (asset: any) => asset.category === category,
-          ).length,
-        })),
-      ];
-
-      const summaryWS = XLSX.utils.json_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(workbook, summaryWS, "Summary");
-
-      // Generate filename with current date
-      const now = new Date();
-      const filename = `PC_Laptop_Assets_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.xlsx`;
-
-      // Write the file
-      XLSX.writeFile(workbook, filename);
-
-      alert(`Excel file exported successfully: ${filename}`);
-    } catch (error) {
-      console.error("Export error:", error);
-      alert("Error exporting to Excel. Please try again.");
-    }
-  };
 
   useEffect(() => {
     // Reset editing state on component load
@@ -643,11 +463,6 @@ export default function PCLaptopInfo() {
       ramId2: "none",
     });
 
-    // Auto-sync to Google Sheets if configured
-    if (isGoogleSheetsConfigured) {
-      triggerAutoSync();
-    }
-
     alert(editingItem ? "Updated successfully!" : "Saved successfully!");
   };
 
@@ -667,31 +482,6 @@ export default function PCLaptopInfo() {
             >
               Add
             </Button>
-            <Button
-              onClick={exportToExcel}
-              className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Export Excel
-            </Button>
-            {isGoogleSheetsConfigured && (
-              <Button
-                onClick={() => googleAppsScriptSync.manualSync()}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Sync to Sheets
-              </Button>
-            )}
-            {!isGoogleSheetsConfigured && (
-              <Button
-                onClick={() => navigate("/google-apps-script-config")}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                Setup Sync
-              </Button>
-            )}
             <Button
               onClick={() => navigate("/")}
               className="bg-slate-700 hover:bg-slate-600 text-white"

@@ -17,13 +17,7 @@ import {
   Monitor,
   Phone,
   Database,
-  Download,
-  RefreshCw,
-  ExternalLink,
-  Settings,
 } from "lucide-react";
-import * as XLSX from "xlsx";
-import { googleAppsScriptSync } from "@/lib/googleAppsScriptSync";
 
 const items = [
   {
@@ -101,17 +95,11 @@ const items = [
 export default function SystemInfo() {
   const navigate = useNavigate();
   const [assetCount, setAssetCount] = useState(0);
-  const [isGoogleSheetsConfigured, setIsGoogleSheetsConfigured] =
-    useState(false);
 
   useEffect(() => {
     const existing = localStorage.getItem(STORAGE_KEY);
     const assets = existing ? JSON.parse(existing) : [];
     setAssetCount(assets.length);
-
-    // Check Google Apps Script configuration
-    const configured = googleAppsScriptSync.isReady();
-    setIsGoogleSheetsConfigured(configured);
   }, []);
 
   const handleLoadDemo = () => {
@@ -123,259 +111,6 @@ export default function SystemInfo() {
       );
     } else {
       alert("Demo data already exists in the system.");
-    }
-  };
-
-  // Export all system assets to Excel
-  const exportSystemAssetsToExcel = () => {
-    try {
-      // Get all data from localStorage
-      const systemAssetsData = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) || "[]",
-      );
-      const pcLaptopData = JSON.parse(
-        localStorage.getItem("pcLaptopAssets") || "[]",
-      );
-
-      // Create a new workbook
-      const workbook = XLSX.utils.book_new();
-
-      // 1. All System Assets Sheet
-      const allAssetsSheet = systemAssetsData.map((asset: any) => {
-        const baseData = {
-          "Asset ID": asset.id,
-          Category: asset.category,
-          "Serial Number": asset.serialNumber || "-",
-          "Vendor Name": asset.vendorName || "-",
-          "Company Name": asset.companyName || "-",
-          "Purchase Date": asset.purchaseDate
-            ? new Date(asset.purchaseDate).toLocaleDateString()
-            : "-",
-          "Warranty End Date": asset.warrantyEndDate
-            ? new Date(asset.warrantyEndDate).toLocaleDateString()
-            : "-",
-          "Created Date": new Date(asset.createdAt).toLocaleDateString(),
-        };
-
-        // Add category-specific fields
-        if (asset.category === "ram") {
-          return {
-            ...baseData,
-            "RAM Size": asset.ramSize || "-",
-            "RAM Type": asset.ramType || "-",
-            "Processor Model": "-",
-            "Storage Type": "-",
-            "Storage Capacity": "-",
-            "Vonage Number": "-",
-            "Extension Code": "-",
-            Password: "-",
-          };
-        } else if (asset.category === "motherboard") {
-          return {
-            ...baseData,
-            "RAM Size": "-",
-            "RAM Type": "-",
-            "Processor Model": asset.processorModel || "-",
-            "Storage Type": "-",
-            "Storage Capacity": "-",
-            "Vonage Number": "-",
-            "Extension Code": "-",
-            Password: "-",
-          };
-        } else if (asset.category === "storage") {
-          return {
-            ...baseData,
-            "RAM Size": "-",
-            "RAM Type": "-",
-            "Processor Model": "-",
-            "Storage Type": asset.storageType || "-",
-            "Storage Capacity": asset.storageCapacity || "-",
-            "Vonage Number": "-",
-            "Extension Code": "-",
-            Password: "-",
-          };
-        } else if (asset.category === "vonage") {
-          return {
-            ...baseData,
-            "RAM Size": "-",
-            "RAM Type": "-",
-            "Processor Model": "-",
-            "Storage Type": "-",
-            "Storage Capacity": "-",
-            "Vonage Number": asset.vonageNumber || "-",
-            "Extension Code": asset.vonageExtCode || "-",
-            Password: asset.vonagePassword || "-",
-          };
-        }
-
-        return {
-          ...baseData,
-          "RAM Size": "-",
-          "RAM Type": "-",
-          "Processor Model": "-",
-          "Storage Type": "-",
-          "Storage Capacity": "-",
-          "Vonage Number": "-",
-          "Extension Code": "-",
-          Password: "-",
-        };
-      });
-
-      const allAssetsWS = XLSX.utils.json_to_sheet(allAssetsSheet);
-      XLSX.utils.book_append_sheet(workbook, allAssetsWS, "All System Assets");
-
-      // 2. Create sheets for each asset category
-      const categories = [
-        { name: "Mouse", category: "mouse" },
-        { name: "Keyboard", category: "keyboard" },
-        { name: "Motherboard", category: "motherboard" },
-        { name: "RAM", category: "ram" },
-        { name: "Storage", category: "storage" },
-        { name: "Camera", category: "camera" },
-        { name: "Headphone", category: "headphone" },
-        { name: "Power Supply", category: "power-supply" },
-        { name: "Monitor", category: "monitor" },
-        { name: "Vonage", category: "vonage" },
-      ];
-
-      categories.forEach(({ name, category }) => {
-        const categoryData = systemAssetsData
-          .filter((asset: any) => asset.category === category)
-          .map((asset: any) => {
-            const baseData = {
-              "Asset ID": asset.id,
-              "Serial Number": asset.serialNumber || "-",
-              "Vendor Name": asset.vendorName || "-",
-              "Company Name": asset.companyName || "-",
-              "Purchase Date": asset.purchaseDate
-                ? new Date(asset.purchaseDate).toLocaleDateString()
-                : "-",
-              "Warranty End Date": asset.warrantyEndDate
-                ? new Date(asset.warrantyEndDate).toLocaleDateString()
-                : "-",
-              "Created Date": new Date(asset.createdAt).toLocaleDateString(),
-            };
-
-            // Add category-specific fields
-            if (category === "ram") {
-              return {
-                ...baseData,
-                "RAM Size": asset.ramSize || "-",
-                "RAM Type": asset.ramType || "-",
-              };
-            } else if (category === "motherboard") {
-              return {
-                ...baseData,
-                "Processor Model": asset.processorModel || "-",
-              };
-            } else if (category === "storage") {
-              return {
-                ...baseData,
-                "Storage Type": asset.storageType || "-",
-                "Storage Capacity": asset.storageCapacity || "-",
-              };
-            } else if (category === "vonage") {
-              return {
-                ...baseData,
-                "Vonage Number": asset.vonageNumber || "-",
-                "Extension Code": asset.vonageExtCode || "-",
-                Password: asset.vonagePassword || "-",
-              };
-            }
-
-            return baseData;
-          });
-
-        if (categoryData.length > 0) {
-          const categoryWS = XLSX.utils.json_to_sheet(categoryData);
-          XLSX.utils.book_append_sheet(workbook, categoryWS, name);
-        }
-      });
-
-      // 3. PC/Laptop Configurations (if exists)
-      if (pcLaptopData.length > 0) {
-        const pcLaptopSheet = pcLaptopData.map((item: any) => {
-          // Get storage details
-          const storageDetails = item.storageId
-            ? systemAssetsData.find((s: any) => s.id === item.storageId)
-            : null;
-
-          // Get RAM details
-          const ram1Details = item.ramId
-            ? systemAssetsData.find((s: any) => s.id === item.ramId)
-            : null;
-          const ram2Details = item.ramId2
-            ? systemAssetsData.find((s: any) => s.id === item.ramId2)
-            : null;
-
-          // Calculate total RAM
-          let totalRam = 0;
-          if (ram1Details?.ramSize) {
-            totalRam +=
-              parseInt(ram1Details.ramSize.replace(/[^0-9]/g, "")) || 0;
-          }
-          if (ram2Details?.ramSize) {
-            totalRam +=
-              parseInt(ram2Details.ramSize.replace(/[^0-9]/g, "")) || 0;
-          }
-
-          return {
-            "PC/Laptop ID": item.id,
-            "Mouse ID": item.mouseId || "-",
-            "Keyboard ID": item.keyboardId || "-",
-            "Motherboard ID": item.motherboardId || "-",
-            "Camera ID": item.cameraId || "-",
-            "Headphone ID": item.headphoneId || "-",
-            "Power Supply ID": item.powerSupplyId || "-",
-            "Storage ID": item.storageId || "-",
-            "Storage Type": storageDetails?.storageType || "-",
-            "Storage Capacity": storageDetails?.storageCapacity || "-",
-            "RAM Slot 1 ID": item.ramId || "-",
-            "RAM Slot 1 Size": ram1Details?.ramSize || "-",
-            "RAM Slot 2 ID": item.ramId2 || "-",
-            "RAM Slot 2 Size": ram2Details?.ramSize || "-",
-            "Total RAM": totalRam > 0 ? `${totalRam}GB` : "-",
-            "Created Date": new Date(item.createdAt).toLocaleDateString(),
-          };
-        });
-
-        const pcLaptopWS = XLSX.utils.json_to_sheet(pcLaptopSheet);
-        XLSX.utils.book_append_sheet(
-          workbook,
-          pcLaptopWS,
-          "PC-Laptop Configurations",
-        );
-      }
-
-      // 4. Summary Sheet
-      const summaryData = [
-        { "Data Type": "Total System Assets", Count: systemAssetsData.length },
-        {
-          "Data Type": "Total PC/Laptop Configurations",
-          Count: pcLaptopData.length,
-        },
-        ...categories.map(({ name, category }) => ({
-          "Data Type": `${name} Assets`,
-          Count: systemAssetsData.filter(
-            (asset: any) => asset.category === category,
-          ).length,
-        })),
-      ];
-
-      const summaryWS = XLSX.utils.json_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(workbook, summaryWS, "Summary");
-
-      // Generate filename with current date
-      const now = new Date();
-      const filename = `System_Assets_Complete_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.xlsx`;
-
-      // Write the file
-      XLSX.writeFile(workbook, filename);
-
-      alert(`Complete system data exported successfully: ${filename}`);
-    } catch (error) {
-      console.error("Export error:", error);
-      alert("Error exporting to Excel. Please try again.");
     }
   };
 
@@ -402,33 +137,6 @@ export default function SystemInfo() {
                 className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
               >
                 View Demo Data
-              </Button>
-            )}
-            {assetCount > 0 && (
-              <Button
-                onClick={exportSystemAssetsToExcel}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Export All Data
-              </Button>
-            )}
-            {isGoogleSheetsConfigured && assetCount > 0 && (
-              <Button
-                onClick={() => googleAppsScriptSync.manualSync()}
-                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Sync to Sheets
-              </Button>
-            )}
-            {!isGoogleSheetsConfigured && (
-              <Button
-                onClick={() => navigate("/google-apps-script-config")}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white flex items-center gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                Setup Auto-Sync
               </Button>
             )}
             <Badge variant="secondary" className="bg-slate-700 text-slate-300">
