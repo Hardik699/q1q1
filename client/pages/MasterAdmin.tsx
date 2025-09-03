@@ -28,6 +28,9 @@ import {
   UserCheck,
   AlertCircle,
   Database,
+  RefreshCw,
+  ExternalLink,
+  Settings,
 } from "lucide-react";
 
 // Type definitions based on the application's data structures
