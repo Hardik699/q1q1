@@ -24,6 +24,7 @@ import {
   Users,
   Building2,
   LayoutDashboard,
+  Database,
 } from "lucide-react";
 
 export default function AppNav() {
@@ -77,6 +78,10 @@ export default function AppNav() {
 
   const handleMainDashboard = () => {
     navigate("/deshbord");
+  };
+
+  const handleMasterAdmin = () => {
+    navigate("/master-admin");
   };
 
 
@@ -133,6 +138,15 @@ export default function AppNav() {
                     >
                       <Building2 className="h-4 w-4 mr-2" />
                       HR Dashboard
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleMasterAdmin}
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-300"
+                    >
+                      <Database className="h-4 w-4 mr-2" />
+                      Master Admin
                     </Button>
                   </>
                 )}
@@ -241,6 +255,17 @@ export default function AppNav() {
                           >
                             <Building2 className="h-4 w-4 mr-2" />
                             HR Dashboard
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700"
+                            onClick={() => {
+                              handleMasterAdmin();
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            <Database className="h-4 w-4 mr-2" />
+                            Master Admin
                           </Button>
                         </>
                       )}
