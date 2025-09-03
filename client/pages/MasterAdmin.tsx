@@ -302,6 +302,33 @@ export default function MasterAdmin() {
     }
   };
 
+  const syncToGoogleSheets = async () => {
+    try {
+      setSyncing(true);
+
+      const response = await fetch("/api/google-sheets/sync-master-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ masterData }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Successfully synced all data to Google Sheets!\n\nRecords updated:\n- Employees: ${result.recordCounts.employees}\n- System Assets: ${result.recordCounts.systemAssets}\n- PC/Laptops: ${result.recordCounts.pcLaptopConfigs}\n- IT Accounts: ${result.recordCounts.itAccounts}\n- Salary Records: ${result.recordCounts.salaryRecords}\n- And ${result.sheetsUpdated - 5} more sheets`);
+      } else {
+        alert(`Error syncing to Google Sheets: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Sync error:", error);
+      alert("Error syncing to Google Sheets. Please try again.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const getAssetDetails = (assetId: string) => {
     const asset = masterData.systemAssets.find(a => a.id === assetId);
     if (!asset) return assetId;
