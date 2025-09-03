@@ -33,6 +33,9 @@ export function createServer() {
   // Salaries API
   app.use("/api/salaries", salariesRouter());
 
+  // Google Sheets API for Master Data
+  app.post("/api/google-sheets/sync-master-data", syncMasterDataToGoogleSheets);
+  app.get("/api/google-sheets/info", getSpreadsheetInfo);
 
   return app;
 }
