@@ -84,7 +84,6 @@ export default function AppNav() {
     navigate("/master-admin");
   };
 
-
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-slate-900/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

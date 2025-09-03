@@ -20,9 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import {
-  Edit,
-} from "lucide-react";
+import { Edit } from "lucide-react";
 
 type Asset = {
   id: string;
@@ -88,7 +86,6 @@ export default function PCLaptopInfo() {
   });
   const [totalRam, setTotalRam] = useState("0GB");
 
-
   // Helper function to get used IDs for a specific component type
   const getUsedIds = (items: Asset[], field: keyof Asset): string[] => {
     return items
@@ -136,7 +133,6 @@ export default function PCLaptopInfo() {
   useEffect(() => {
     setTotalRam(calculateTotalRam());
   }, [form.ramId, form.ramId2]);
-
 
   useEffect(() => {
     // Reset editing state on component load
@@ -466,7 +462,6 @@ export default function PCLaptopInfo() {
       ramId: "none",
       ramId2: "none",
     });
-
 
     alert(editingItem ? "Updated successfully!" : "Saved successfully!");
   };

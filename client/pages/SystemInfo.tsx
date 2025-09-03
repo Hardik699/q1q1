@@ -100,7 +100,6 @@ export default function SystemInfo() {
     const existing = localStorage.getItem(STORAGE_KEY);
     const assets = existing ? JSON.parse(existing) : [];
     setAssetCount(assets.length);
-
   }, []);
 
   const handleLoadDemo = () => {
@@ -114,7 +113,6 @@ export default function SystemInfo() {
       alert("Demo data already exists in the system.");
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-deep-900 via-blue-deep-800 to-slate-900">

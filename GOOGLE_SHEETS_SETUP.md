@@ -8,7 +8,7 @@ The Master Admin page can sync all application data to a Google Sheets document 
 
 1. **Summary** - Overview of all data counts and last updated timestamps
 2. **Employees** - Complete HR employee records with personal and work details
-3. **Admin_Users** - System admin accounts and credential status  
+3. **Admin_Users** - System admin accounts and credential status
 4. **Departments** - Department structure with managers and employee counts
 5. **System_Assets** - All hardware inventory (mouse, keyboard, RAM, storage, etc.)
 6. **PC_Laptop_Configs** - Complete system builds with component mapping
@@ -71,6 +71,7 @@ The Master Admin page can sync all application data to a Google Sheets document 
 Add these environment variables to your application:
 
 #### Using Builder.io Environment Variables:
+
 1. Click the "Dev Server Control" button
 2. Use `set_env_variable` to add:
 
@@ -80,12 +81,14 @@ GOOGLE_SERVICE_ACCOUNT_CREDENTIALS={"type":"service_account","project_id":"..."}
 ```
 
 #### Or using .env file (local development):
+
 ```env
 GOOGLE_SHEET_ID=1ABC123def456ghi789jkl0mn_your_actual_spreadsheet_id
 GOOGLE_SERVICE_ACCOUNT_CREDENTIALS={"type":"service_account","project_id":"your-project","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n","client_email":"master-admin-sheets-sync@your-project.iam.gserviceaccount.com","client_id":"123456789","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/master-admin-sheets-sync%40your-project.iam.gserviceaccount.com"}
 ```
 
-**⚠️ Security Note**: 
+**⚠️ Security Note**:
+
 - The entire JSON content should be on one line for the environment variable
 - Never commit credentials to your repository
 - Use environment variables or secure credential storage
@@ -104,58 +107,69 @@ GOOGLE_SERVICE_ACCOUNT_CREDENTIALS={"type":"service_account","project_id":"your-
 When you sync, the following sheets will be created/updated:
 
 ### Summary Sheet
+
 - Data type counts
 - Last updated timestamps
 - Quick overview of all records
 
-### Employees Sheet  
+### Employees Sheet
+
 - Complete employee records
 - Personal information (name, contact, family details)
 - Work information (department, position, salary)
 - Document status and dates
 
 ### System Assets Sheet
+
 - Hardware inventory with specifications
-- Warranty and purchase information  
+- Warranty and purchase information
 - Category-specific details (RAM size, storage capacity, etc.)
 - Vonage phone system details
 
 ### PC/Laptop Configurations Sheet
+
 - Complete system builds
 - Component mapping with asset details
 - Hardware combinations and configurations
 
 ### IT Accounts Sheet
+
 - Employee IT credentials (emails masked in sheets)
 - System assignments
 - Software licenses and access details
 
 ### Salary Records Sheet
+
 - Detailed payroll calculations
 - Working days and attendance factors
 - Bonus and deduction breakdowns
 
 ### Other Supporting Sheets
+
 - Departments, Leave Requests, IT Notifications, Attendance Records
 
 ## 🔧 Troubleshooting
 
 ### "Not Configured" Status
+
 - Check environment variables are set correctly
 - Verify spreadsheet ID is correct
 - Ensure service account JSON is valid
 
 ### "Permission Denied" Errors
+
 - Check if spreadsheet is shared with service account email
 - Verify service account has "Editor" permissions
 - Confirm Google Sheets API is enabled
 
 ### "Spreadsheet Not Found" Errors
+
 - Verify the spreadsheet ID in the environment variable
 - Ensure the spreadsheet exists and is accessible
 - Check the URL format is correct
 
 ### Sync Errors
+
 - Check server logs for detailed error messages
 - Verify all required data fields are present
 - Ensure stable internet connection
