@@ -464,6 +464,83 @@ export default function MasterAdmin() {
           </Card>
         </div>
 
+        {/* Google Sheets Status */}
+        <Card className="bg-slate-900/50 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <RefreshCw className="h-5 w-5" />
+              Google Sheets Integration Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isGoogleSheetsConfigured ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="default" className="bg-green-600">Connected</Badge>
+                  <span className="text-white">Google Sheets is configured and ready</span>
+                </div>
+                {spreadsheetInfo.title && (
+                  <div className="text-sm text-slate-300">
+                    <span className="font-medium">Spreadsheet:</span> {spreadsheetInfo.title}
+                  </div>
+                )}
+                {spreadsheetInfo.sheets && spreadsheetInfo.sheets.length > 0 && (
+                  <div className="text-sm text-slate-300">
+                    <span className="font-medium">Sheets:</span> {spreadsheetInfo.sheets.map(s => s.title).join(", ")}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={syncToGoogleSheets}
+                    disabled={syncing}
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                    {syncing ? 'Syncing...' : 'Sync All Data'}
+                  </Button>
+                  {spreadsheetInfo.url && (
+                    <Button
+                      onClick={() => window.open(spreadsheetInfo.url, '_blank')}
+                      size="sm"
+                      variant="outline"
+                      className="border-slate-600 text-slate-300"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open Spreadsheet
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Badge variant="destructive">Not Configured</Badge>
+                  <span className="text-white">Google Sheets integration not set up</span>
+                </div>
+                <div className="text-sm text-slate-400">
+                  <p className="mb-2">To enable Google Sheets sync, you need to:</p>
+                  <ul className="list-disc list-inside space-y-1 ml-4">
+                    <li>Create a Google Service Account</li>
+                    <li>Download the service account JSON credentials</li>
+                    <li>Set GOOGLE_SERVICE_ACCOUNT_CREDENTIALS environment variable</li>
+                    <li>Create a Google Sheet and set GOOGLE_SHEET_ID environment variable</li>
+                    <li>Share the Google Sheet with your service account email</li>
+                  </ul>
+                </div>
+                <Button
+                  onClick={() => alert('Please refer to the setup documentation for detailed instructions on configuring Google Sheets integration.')}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Setup Instructions
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Tabbed Data Tables */}
         <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
