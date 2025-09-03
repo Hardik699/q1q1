@@ -215,7 +215,28 @@ export default function MasterAdmin() {
 
   useEffect(() => {
     loadAllData();
+    checkGoogleSheetsConfiguration();
   }, []);
+
+  const checkGoogleSheetsConfiguration = async () => {
+    try {
+      const response = await fetch("/api/google-sheets/info");
+      if (response.ok) {
+        const data = await response.json();
+        setIsGoogleSheetsConfigured(data.success);
+        if (data.success) {
+          setSpreadsheetInfo({
+            title: data.title,
+            url: data.url,
+            sheets: data.sheets
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error checking Google Sheets configuration:", error);
+      setIsGoogleSheetsConfigured(false);
+    }
+  };
 
   const loadAllData = () => {
     try {
