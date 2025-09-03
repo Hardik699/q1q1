@@ -205,6 +205,13 @@ export default function MasterAdmin() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [isGoogleSheetsConfigured, setIsGoogleSheetsConfigured] = useState(false);
+  const [spreadsheetInfo, setSpreadsheetInfo] = useState<{
+    title?: string;
+    url?: string;
+    sheets?: Array<{ title: string; sheetId: number }>;
+  }>({});
 
   useEffect(() => {
     loadAllData();
