@@ -37,10 +37,6 @@ export async function createServer() {
   // Salaries API
   app.use("/api/salaries", salariesRouter());
 
-  // Google Sheets API
-  app.post("/api/google-sheets/sync", syncToGoogleSheets);
-  app.get("/api/google-sheets/info", getSpreadsheetInfo);
-
   // User API
   app.use("/api/users", usersRouter);
 
