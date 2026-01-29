@@ -193,17 +193,6 @@ export default function AppNav() {
                             variant="outline"
                             className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700"
                             onClick={() => {
-                              handleViewUsers();
-                              setIsMobileMenuOpen(false);
-                            }}
-                          >
-                            <Users className="h-4 w-4 mr-2" />
-                            View Users
-                          </Button>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start border-slate-600 text-slate-300 hover:bg-slate-700"
-                            onClick={() => {
                               handleMainDashboard();
                               setIsMobileMenuOpen(false);
                             }}
