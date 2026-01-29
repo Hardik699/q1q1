@@ -16,13 +16,10 @@ import adminRouter from "./routes/admin";
 export async function createServer() {
   const app = express();
 
-  // Connect to MongoDB
-  try {
-    await connectDB();
-  } catch (error) {
+  // Connect to MongoDB (non-blocking)
+  connectDB().catch((error) => {
     console.error("Failed to connect to MongoDB:", error);
-    // Continue anyway for now
-  }
+  });
 
   // Middleware
   app.use(cors());
