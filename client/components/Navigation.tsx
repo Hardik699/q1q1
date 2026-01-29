@@ -99,15 +99,6 @@ export default function AppNav() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleViewUsers}
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-300"
-                    >
-                      <Users className="h-4 w-4 mr-2" />
-                      View Users
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
                       onClick={handleMainDashboard}
                       className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white transition-all duration-300"
                     >
