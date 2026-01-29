@@ -28,10 +28,6 @@ import {
   Settings,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import {
-  googleAppsScriptSync,
-  useGoogleAppsScriptAutoSync,
-} from "@/lib/googleAppsScriptSync";
 
 type Asset = {
   id: string;
