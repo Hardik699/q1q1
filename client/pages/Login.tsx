@@ -133,6 +133,24 @@ export default function Login() {
                 </div>
               </div>
 
+              {/* Admin Checkbox */}
+              <div className="flex items-center space-x-2 group/checkbox">
+                <Checkbox
+                  id="admin"
+                  checked={isAdmin}
+                  onCheckedChange={(checked) =>
+                    setIsAdmin(checked as boolean)
+                  }
+                  className="border-slate-600 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 transition-all duration-300 hover:border-slate-500 hover:bg-slate-700/30"
+                />
+                <Label
+                  htmlFor="admin"
+                  className="text-sm text-slate-400 cursor-pointer transition-colors duration-300 group-hover/checkbox:text-slate-300"
+                >
+                  Admin Login
+                </Label>
+              </div>
+
               {/* Remember Me */}
               <div className="flex items-center space-x-2 group/checkbox">
                 <Checkbox
