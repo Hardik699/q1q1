@@ -30,10 +30,16 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
     configureServer(server) {
-      const app = createServer();
+      const appPromise = createServer();
 
       // Add Express app as middleware to Vite dev server
-      server.middlewares.use(app);
+      return {
+        middlewares: [
+          (req, res, next) => {
+            appPromise.then((app) => app(req, res, next)).catch(next);
+          },
+        ],
+      };
     },
   };
 }
