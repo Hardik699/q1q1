@@ -26,20 +26,16 @@ export default defineConfig(({ mode }) => ({
 }));
 
 function expressPlugin(): Plugin {
+  let app: any;
+
   return {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
-    configureServer(server) {
-      const appPromise = createServer();
+    async configureServer(server) {
+      app = await createServer();
 
       // Add Express app as middleware to Vite dev server
-      return {
-        middlewares: [
-          (req, res, next) => {
-            appPromise.then((app) => app(req, res, next)).catch(next);
-          },
-        ],
-      };
+      server.middlewares.use(app);
     },
   };
 }
