@@ -21,7 +21,6 @@ import {
   User,
   Menu,
   LogIn,
-  Users,
   Building2,
   LayoutDashboard,
 } from "lucide-react";
