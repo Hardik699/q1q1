@@ -1,7 +1,7 @@
 import AppNav from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, Shield, ArrowRight, ServerCog } from "lucide-react";
+import { Users, Building2, ArrowRight, ServerCog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
