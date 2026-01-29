@@ -73,22 +73,29 @@ export default function Login() {
               </p>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm">
+                {error}
+              </div>
+            )}
+
             {/* Login Form */}
             <form onSubmit={handleLogin} className="space-y-6">
-              {/* Username Field */}
+              {/* Email Field */}
               <div className="space-y-2">
                 <Label
-                  htmlFor="username"
+                  htmlFor="email"
                   className="text-slate-300 text-sm font-medium"
                 >
-                  Username
+                  Email
                 </Label>
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white placeholder-slate-500 h-12 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300 hover:bg-slate-700/50 hover:border-slate-600"
                   required
                 />
