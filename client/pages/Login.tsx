@@ -6,43 +6,42 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import AppNav from "@/components/Navigation";
+import { userAPI, adminAPI } from "@/services/api";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
-    // Check admin credentials
-    if (username === "admin" && password === "admin") {
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userRole", "admin");
-      localStorage.setItem("currentUser", "admin");
-      navigate("/");
-    } else {
-      // Check created user credentials
-      const credentials = JSON.parse(
-        localStorage.getItem("userCredentials") || "{}",
-      );
-      if (credentials[username] && credentials[username] === password) {
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userRole", "user");
-        localStorage.setItem("currentUser", username);
-        navigate("/");
-      } else {
-        alert(
-          "Invalid credentials. Use admin/admin or a created user account.",
-        );
+    try {
+      const data = { email, password };
+      const response = isAdmin ? await adminAPI.login(data) : await userAPI.login(data);
+
+      // Store token and user info
+      localStorage.setItem("authToken", response.token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("userRole", response.user.role);
+
+      if (rememberMe) {
+        localStorage.setItem("rememberEmail", email);
       }
-    }
 
-    setIsLoading(false);
+      navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
