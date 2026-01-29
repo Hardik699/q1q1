@@ -595,11 +595,6 @@ export default function HRDashboard() {
     setPassbookPreview("");
     setDocumentPreviews({});
     setIsLoading(false);
-
-    // Redirect to IT form with pre-filled employee data
-    navigate(
-      `/it?employeeId=${employee.id}&department=${encodeURIComponent(employee.department)}&tableNumber=${encodeURIComponent(employee.tableNumber)}`,
-    );
   };
 
   // Handle employee status toggle
