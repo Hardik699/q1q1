@@ -21,10 +21,12 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "googleapis": "^159.0.0",
     "mime-types": "^3.0.1",
+    "mongoose": "^9.1.5",
     "multer": "^2.0.2",
     "nanoid": "^5.1.5",
     "xlsx": "^0.18.5",
