@@ -9,9 +9,20 @@ import {
   syncToGoogleSheets,
   getSpreadsheetInfo,
 } from "./services/googleSheets";
+import { connectDB } from "./db";
+import usersRouter from "./routes/users";
+import adminRouter from "./routes/admin";
 
-export function createServer() {
+export async function createServer() {
   const app = express();
+
+  // Connect to MongoDB
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error("Failed to connect to MongoDB:", error);
+    // Continue anyway for now
+  }
 
   // Middleware
   app.use(cors());
@@ -36,6 +47,12 @@ export function createServer() {
   // Google Sheets API
   app.post("/api/google-sheets/sync", syncToGoogleSheets);
   app.get("/api/google-sheets/info", getSpreadsheetInfo);
+
+  // User API
+  app.use("/api/users", usersRouter);
+
+  // Admin API
+  app.use("/api/admin", adminRouter);
 
   return app;
 }
