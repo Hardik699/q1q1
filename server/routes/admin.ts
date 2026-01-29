@@ -1,4 +1,4 @@
-import { Router, RequestHandler } from "express";
+import { Router } from "express";
 import { Admin } from "../models/Admin";
 import { User } from "../models/User";
 import jwt from "jsonwebtoken";
@@ -7,24 +7,19 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-prod";
 
 // Register admin
-export const handleAdminRegister: RequestHandler = async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { email, password, firstName, lastName } = req.body;
 
-    // Validation
     if (!email || !password || !firstName || !lastName) {
-      return res
-        .status(400)
-        .json({ error: "Missing required fields" });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Check if admin exists
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
       return res.status(400).json({ error: "Admin email already registered" });
     }
 
-    // Create new admin
     const admin = new Admin({
       email,
       password,
@@ -34,7 +29,6 @@ export const handleAdminRegister: RequestHandler = async (req, res) => {
 
     await admin.save();
 
-    // Generate token
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: "admin" },
       JWT_SECRET
@@ -55,20 +49,18 @@ export const handleAdminRegister: RequestHandler = async (req, res) => {
     console.error("Admin register error:", error);
     res.status(500).json({ error: "Admin registration failed" });
   }
-};
+});
 
 // Login admin
-export const handleAdminLogin: RequestHandler = async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ error: "Email and password required" });
+      return res.status(400).json({ error: "Email and password required" });
     }
 
-    const admin = await Admin.findOne({ email });
+    const admin = (await Admin.findOne({ email })) as any;
     if (!admin) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -78,11 +70,9 @@ export const handleAdminLogin: RequestHandler = async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Update last login
     admin.lastLogin = new Date();
     await admin.save();
 
-    // Generate token
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: "admin" },
       JWT_SECRET
@@ -103,10 +93,10 @@ export const handleAdminLogin: RequestHandler = async (req, res) => {
     console.error("Admin login error:", error);
     res.status(500).json({ error: "Admin login failed" });
   }
-};
+});
 
 // Get all admins
-export const handleGetAllAdmins: RequestHandler = async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const admins = await Admin.find().select("-password");
     res.json(admins);
@@ -114,12 +104,12 @@ export const handleGetAllAdmins: RequestHandler = async (req, res) => {
     console.error("Get all admins error:", error);
     res.status(500).json({ error: "Failed to get admins" });
   }
-};
+});
 
 // Get admin profile
-export const handleGetAdminProfile: RequestHandler = async (req, res) => {
+router.get("/profile", async (req, res) => {
   try {
-    const adminId = (req as any).admin?.id;
+    const adminId = (req as any).userId;
     if (!adminId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -134,12 +124,12 @@ export const handleGetAdminProfile: RequestHandler = async (req, res) => {
     console.error("Get admin profile error:", error);
     res.status(500).json({ error: "Failed to get admin profile" });
   }
-};
+});
 
 // Update admin profile
-export const handleUpdateAdminProfile: RequestHandler = async (req, res) => {
+router.put("/profile", async (req, res) => {
   try {
-    const adminId = (req as any).admin?.id;
+    const adminId = (req as any).userId;
     if (!adminId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
@@ -160,11 +150,16 @@ export const handleUpdateAdminProfile: RequestHandler = async (req, res) => {
     console.error("Update admin profile error:", error);
     res.status(500).json({ error: "Failed to update admin profile" });
   }
-};
+});
 
 // Deactivate user (admin only)
-export const handleDeactivateUser: RequestHandler = async (req, res) => {
+router.put("/deactivate-user/:id", async (req, res) => {
   try {
+    const userRole = (req as any).userRole;
+    if (userRole !== "admin") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
     const { id } = req.params;
 
     const user = await User.findByIdAndUpdate(
@@ -181,11 +176,16 @@ export const handleDeactivateUser: RequestHandler = async (req, res) => {
     console.error("Deactivate user error:", error);
     res.status(500).json({ error: "Failed to deactivate user" });
   }
-};
+});
 
 // Delete admin
-export const handleDeleteAdmin: RequestHandler = async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
+    const userRole = (req as any).userRole;
+    if (userRole !== "admin") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
     const { id } = req.params;
     await Admin.findByIdAndDelete(id);
 
@@ -194,14 +194,6 @@ export const handleDeleteAdmin: RequestHandler = async (req, res) => {
     console.error("Delete admin error:", error);
     res.status(500).json({ error: "Failed to delete admin" });
   }
-};
-
-router.post("/register", handleAdminRegister);
-router.post("/login", handleAdminLogin);
-router.get("/", handleGetAllAdmins);
-router.get("/profile", handleGetAdminProfile);
-router.put("/profile", handleUpdateAdminProfile);
-router.put("/deactivate-user/:id", handleDeactivateUser);
-router.delete("/:id", handleDeleteAdmin);
+});
 
 export default router;
