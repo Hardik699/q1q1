@@ -5,10 +5,6 @@ import path from "path";
 import { handleDemo } from "./routes/demo";
 import { attachIdentity } from "./middleware/auth";
 import { salariesRouter } from "./routes/salaries";
-import {
-  syncToGoogleSheets,
-  getSpreadsheetInfo,
-} from "./services/googleSheets";
 import { connectDB } from "./db";
 import usersRouter from "./routes/users";
 import adminRouter from "./routes/admin";
