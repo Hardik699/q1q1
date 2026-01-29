@@ -19,8 +19,6 @@ import SystemInfo from "./pages/SystemInfo";
 import SystemInfoDetail from "./pages/SystemInfoDetail";
 import PCLaptopInfo from "./pages/PCLaptopInfo";
 import DemoDataView from "./pages/DemoDataView";
-import GoogleSheetsConfig from "./pages/GoogleSheetsConfig";
-import GoogleAppsScriptConfig from "./pages/GoogleAppsScriptConfig";
 
 const queryClient = new QueryClient();
 
