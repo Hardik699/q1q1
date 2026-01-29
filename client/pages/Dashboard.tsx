@@ -17,53 +17,7 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          <Card className="group bg-slate-900/50 border-slate-700 backdrop-blur-sm hover:bg-slate-800/60 hover:border-blue-500/50 transition-all duration-300 cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center group-hover:bg-blue-500/30 transition-colors duration-300">
-                  <Users className="h-6 w-6 text-blue-400" />
-                </div>
-                <Button
-                  onClick={() => navigate("/hr")}
-                  size="sm"
-                  className="bg-blue-500 hover:bg-blue-600 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                >
-                  Go <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">HR</h3>
-                <p className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors duration-300">
-                  Manage employee data and departments
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="group bg-slate-900/50 border-slate-700 backdrop-blur-sm hover:bg-slate-800/60 hover:border-purple-500/50 transition-all duration-300 cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-colors duration-300">
-                  <Shield className="h-6 w-6 text-purple-400" />
-                </div>
-                <Button
-                  onClick={() => navigate("/admin")}
-                  size="sm"
-                  className="bg-purple-500 hover:bg-purple-600 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                >
-                  Go <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Admin</h3>
-                <p className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors duration-300">
-                  Admin tools and settings
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="group bg-slate-900/50 border-slate-700 backdrop-blur-sm hover:bg-slate-800/60 hover:border-orange-500/50 transition-all duration-300 cursor-pointer">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
