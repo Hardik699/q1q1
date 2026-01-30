@@ -1948,7 +1948,7 @@ Generated on: ${new Date().toLocaleString()}
                           <div className="relative">
                             <input
                               type="file"
-                              accept="image/*,.pdf"
+                              accept=".pdf"
                               onChange={handlePassbookUpload}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
