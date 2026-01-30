@@ -1337,7 +1337,7 @@ Generated on: ${new Date().toLocaleString()}
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="employees" className="space-y-6">
+        <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border border-slate-700">
             <TabsTrigger
               value="employees"
