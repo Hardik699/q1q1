@@ -2014,7 +2014,7 @@ Generated on: ${new Date().toLocaleString()}
                                 <div className="relative">
                                   <input
                                     type="file"
-                                    accept="image/*,.pdf,.doc,.docx"
+                                    accept=".pdf"
                                     onChange={handleDocumentUpload(docType.key)}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                   />
