@@ -468,20 +468,26 @@ export default function HRDashboard() {
     }
   };
 
-  const handlePassbookUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePassbookUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!validatePDF(file)) {
         e.target.value = ""; // Reset input
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setPassbookPreview(result);
-        setNewEmployee({ ...newEmployee, bankPassbook: result });
-      };
-      reader.readAsDataURL(file);
+
+      try {
+        toast.loading("Uploading passbook...");
+        const { url } = await uploadPDF(file, "bank-passbooks");
+        setPassbookPreview(url);
+        setNewEmployee({ ...newEmployee, bankPassbook: url });
+        toast.dismiss();
+        toast.success("Passbook uploaded successfully!");
+      } catch (error) {
+        toast.dismiss();
+        toast.error(error instanceof Error ? error.message : "Upload failed");
+        e.target.value = "";
+      }
     }
   };
 
