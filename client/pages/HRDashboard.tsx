@@ -793,22 +793,28 @@ export default function HRDashboard() {
     });
   };
 
-  const handleResignationUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResignationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!validatePDF(file)) {
         e.target.value = ""; // Reset input
         return;
       }
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
+
+      try {
+        toast.loading("Uploading resignation letter...");
+        const { url } = await uploadPDF(file, "resignation-letters");
         setDeactivationModal((prev) => ({
           ...prev,
-          resignationLetter: result,
+          resignationLetter: url,
         }));
-      };
-      reader.readAsDataURL(file);
+        toast.dismiss();
+        toast.success("Resignation letter uploaded successfully!");
+      } catch (error) {
+        toast.dismiss();
+        toast.error(error instanceof Error ? error.message : "Upload failed");
+        e.target.value = "";
+      }
     }
   };
 
