@@ -468,7 +468,9 @@ export default function HRDashboard() {
     }
   };
 
-  const handlePassbookUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePassbookUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!validatePDF(file)) {
@@ -492,7 +494,8 @@ export default function HRDashboard() {
   };
 
   const handleDocumentUpload =
-    (documentType: string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    (documentType: string) =>
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
         if (!validatePDF(file)) {
@@ -793,7 +796,9 @@ export default function HRDashboard() {
     });
   };
 
-  const handleResignationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResignationUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!validatePDF(file)) {
@@ -1383,7 +1388,11 @@ Generated on: ${new Date().toLocaleString()}
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="space-y-6">
+        <Tabs
+          value={activeMainTab}
+          onValueChange={setActiveMainTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border border-slate-700">
             <TabsTrigger
               value="employees"

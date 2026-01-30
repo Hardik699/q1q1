@@ -123,7 +123,7 @@ router.put("/profile", async (req, res) => {
     const user = await User.findByIdAndUpdate(
       userId,
       { firstName, lastName, phone, address },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     res.json({

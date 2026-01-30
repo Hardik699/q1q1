@@ -275,7 +275,9 @@ export default function Register() {
                 disabled={isLoading}
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white h-10 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 mt-6"
               >
-                <span>{isLoading ? "Creating account..." : "Create Account"}</span>
+                <span>
+                  {isLoading ? "Creating account..." : "Create Account"}
+                </span>
                 {!isLoading && <ArrowRight className="h-4 w-4" />}
               </Button>
             </form>

@@ -13,7 +13,7 @@ export interface UploadResponse {
  */
 export async function uploadPDF(
   file: File,
-  folder: string = "documents"
+  folder: string = "documents",
 ): Promise<UploadResponse> {
   // Validate file type
   if (file.type !== "application/pdf") {
@@ -67,7 +67,7 @@ export async function deletePDF(filePath: string): Promise<void> {
  */
 export async function handleFileUpload(
   event: React.ChangeEvent<HTMLInputElement>,
-  folder: string = "documents"
+  folder: string = "documents",
 ): Promise<string> {
   const file = event.target.files?.[0];
 

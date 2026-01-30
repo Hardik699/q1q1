@@ -25,7 +25,9 @@ export default function Login() {
 
     try {
       const data = { email, password };
-      const response = isAdmin ? await adminAPI.login(data) : await userAPI.login(data);
+      const response = isAdmin
+        ? await adminAPI.login(data)
+        : await userAPI.login(data);
 
       // Store token and user info
       localStorage.setItem("authToken", response.token);
@@ -138,9 +140,7 @@ export default function Login() {
                 <Checkbox
                   id="admin"
                   checked={isAdmin}
-                  onCheckedChange={(checked) =>
-                    setIsAdmin(checked as boolean)
-                  }
+                  onCheckedChange={(checked) => setIsAdmin(checked as boolean)}
                   className="border-slate-600 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 transition-all duration-300 hover:border-slate-500 hover:bg-slate-700/30"
                 />
                 <Label

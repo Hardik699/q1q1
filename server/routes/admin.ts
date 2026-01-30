@@ -31,7 +31,7 @@ router.post("/register", async (req, res) => {
 
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: "admin" },
-      JWT_SECRET
+      JWT_SECRET,
     );
 
     res.status(201).json({
@@ -75,7 +75,7 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: "admin" },
-      JWT_SECRET
+      JWT_SECRET,
     );
 
     res.json({
@@ -139,7 +139,7 @@ router.put("/profile", async (req, res) => {
     const admin = await Admin.findByIdAndUpdate(
       adminId,
       { firstName, lastName, permissions },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     res.json({
@@ -165,7 +165,7 @@ router.put("/deactivate-user/:id", async (req, res) => {
     const user = await User.findByIdAndUpdate(
       id,
       { isActive: false },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     res.json({

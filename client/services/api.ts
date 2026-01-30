@@ -70,7 +70,7 @@ export const userAPI = {
 
   updateProfile: async (
     token: string,
-    data: Partial<User>
+    data: Partial<User>,
   ): Promise<{ message: string; user: User }> => {
     const response = await fetch(`${API_BASE}/users/profile`, {
       method: "PUT",
@@ -153,10 +153,13 @@ export const adminAPI = {
   },
 
   deactivateUser: async (token: string, userId: string) => {
-    const response = await fetch(`${API_BASE}/admin/deactivate-user/${userId}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await fetch(
+      `${API_BASE}/admin/deactivate-user/${userId}`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
     if (!response.ok) throw new Error("Failed to deactivate user");
     return response.json();
   },
