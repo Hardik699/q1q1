@@ -44,5 +44,8 @@ export async function createServer() {
   // Admin API
   app.use("/api/admin", adminRouter);
 
+  // Upload API
+  app.use("/api/upload", uploadRouter);
+
   return app;
 }
