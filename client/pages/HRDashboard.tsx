@@ -599,6 +599,10 @@ export default function HRDashboard() {
     setPassbookPreview("");
     setDocumentPreviews({});
     setIsLoading(false);
+
+    // Show success toast and redirect to employee details tab
+    toast.success(`Employee "${employee.fullName}" created successfully!`);
+    setActiveMainTab("employee-details");
   };
 
   // Handle employee status toggle
