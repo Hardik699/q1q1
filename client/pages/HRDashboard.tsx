@@ -276,6 +276,9 @@ export default function HRDashboard() {
     activeTab: "details",
   });
 
+  // Main tab state
+  const [activeMainTab, setActiveMainTab] = useState<string>("employees");
+
   // Photo edit state
   const [editPhotoPreview, setEditPhotoPreview] = useState<string>("");
 
