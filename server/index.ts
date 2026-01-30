@@ -8,6 +8,7 @@ import { salariesRouter } from "./routes/salaries";
 import { connectDB } from "./db";
 import usersRouter from "./routes/users";
 import adminRouter from "./routes/admin";
+import uploadRouter from "./routes/upload";
 
 export async function createServer() {
   const app = express();
