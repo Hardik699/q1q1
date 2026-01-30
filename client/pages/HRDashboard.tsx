@@ -438,6 +438,21 @@ export default function HRDashboard() {
     localStorage.setItem("salaryRecords", JSON.stringify(updatedRecords));
   };
 
+  // Validate PDF file
+  const validatePDF = (file: File): boolean => {
+    const validTypes = ["application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Only PDF files are allowed");
+      return false;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      // 10MB limit
+      toast.error("PDF file size must be less than 10MB");
+      return false;
+    }
+    return true;
+  };
+
   // Handle file uploads
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -455,6 +470,10 @@ export default function HRDashboard() {
   const handlePassbookUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!validatePDF(file)) {
+        e.target.value = ""; // Reset input
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
@@ -469,6 +488,10 @@ export default function HRDashboard() {
     (documentType: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
+        if (!validatePDF(file)) {
+          e.target.value = ""; // Reset input
+          return;
+        }
         const reader = new FileReader();
         reader.onload = (e) => {
           const result = e.target?.result as string;
