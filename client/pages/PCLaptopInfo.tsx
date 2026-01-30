@@ -28,10 +28,6 @@ import {
   Settings,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import {
-  googleAppsScriptSync,
-  useGoogleAppsScriptAutoSync,
-} from "@/lib/googleAppsScriptSync";
 
 type Asset = {
   id: string;
@@ -96,15 +92,6 @@ export default function PCLaptopInfo() {
     ramId2: "",
   });
   const [totalRam, setTotalRam] = useState("0GB");
-  const [isGoogleSheetsConfigured, setIsGoogleSheetsConfigured] =
-    useState(false);
-  const { triggerAutoSync } = useGoogleAppsScriptAutoSync();
-
-  // Check Google Apps Script configuration on load
-  useEffect(() => {
-    const configured = googleAppsScriptSync.isReady();
-    setIsGoogleSheetsConfigured(configured);
-  }, []);
 
   // Helper function to get used IDs for a specific component type
   const getUsedIds = (items: Asset[], field: keyof Asset): string[] => {
@@ -643,11 +630,6 @@ export default function PCLaptopInfo() {
       ramId2: "none",
     });
 
-    // Auto-sync to Google Sheets if configured
-    if (isGoogleSheetsConfigured) {
-      triggerAutoSync();
-    }
-
     alert(editingItem ? "Updated successfully!" : "Saved successfully!");
   };
 
@@ -674,24 +656,6 @@ export default function PCLaptopInfo() {
               <Download className="h-4 w-4" />
               Export Excel
             </Button>
-            {isGoogleSheetsConfigured && (
-              <Button
-                onClick={() => googleAppsScriptSync.manualSync()}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Sync to Sheets
-              </Button>
-            )}
-            {!isGoogleSheetsConfigured && (
-              <Button
-                onClick={() => navigate("/google-apps-script-config")}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white flex items-center gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                Setup Sync
-              </Button>
-            )}
             <Button
               onClick={() => navigate("/")}
               className="bg-slate-700 hover:bg-slate-600 text-white"

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { uploadPDF } from "@/services/uploadService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -275,6 +277,9 @@ export default function HRDashboard() {
     activeTab: "details",
   });
 
+  // Main tab state
+  const [activeMainTab, setActiveMainTab] = useState<string>("employees");
+
   // Photo edit state
   const [editPhotoPreview, setEditPhotoPreview] = useState<string>("");
 
@@ -434,6 +439,21 @@ export default function HRDashboard() {
     localStorage.setItem("salaryRecords", JSON.stringify(updatedRecords));
   };
 
+  // Validate PDF file
+  const validatePDF = (file: File): boolean => {
+    const validTypes = ["application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Only PDF files are allowed");
+      return false;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      // 10MB limit
+      toast.error("PDF file size must be less than 10MB");
+      return false;
+    }
+    return true;
+  };
+
   // Handle file uploads
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -448,30 +468,53 @@ export default function HRDashboard() {
     }
   };
 
-  const handlePassbookUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePassbookUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setPassbookPreview(result);
-        setNewEmployee({ ...newEmployee, bankPassbook: result });
-      };
-      reader.readAsDataURL(file);
+      if (!validatePDF(file)) {
+        e.target.value = ""; // Reset input
+        return;
+      }
+
+      try {
+        toast.loading("Uploading passbook...");
+        const { url } = await uploadPDF(file, "bank-passbooks");
+        setPassbookPreview(url);
+        setNewEmployee({ ...newEmployee, bankPassbook: url });
+        toast.dismiss();
+        toast.success("Passbook uploaded successfully!");
+      } catch (error) {
+        toast.dismiss();
+        toast.error(error instanceof Error ? error.message : "Upload failed");
+        e.target.value = "";
+      }
     }
   };
 
   const handleDocumentUpload =
-    (documentType: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    (documentType: string) =>
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          setDocumentPreviews({ ...documentPreviews, [documentType]: result });
-          setNewEmployee({ ...newEmployee, [documentType]: result });
-        };
-        reader.readAsDataURL(file);
+        if (!validatePDF(file)) {
+          e.target.value = ""; // Reset input
+          return;
+        }
+
+        try {
+          toast.loading(`Uploading ${documentType}...`);
+          const { url } = await uploadPDF(file, "documents");
+          setDocumentPreviews({ ...documentPreviews, [documentType]: url });
+          setNewEmployee({ ...newEmployee, [documentType]: url });
+          toast.dismiss();
+          toast.success(`${documentType} uploaded successfully!`);
+        } catch (error) {
+          toast.dismiss();
+          toast.error(error instanceof Error ? error.message : "Upload failed");
+          e.target.value = "";
+        }
       }
     };
 
@@ -596,10 +639,9 @@ export default function HRDashboard() {
     setDocumentPreviews({});
     setIsLoading(false);
 
-    // Redirect to IT form with pre-filled employee data
-    navigate(
-      `/it?employeeId=${employee.id}&department=${encodeURIComponent(employee.department)}&tableNumber=${encodeURIComponent(employee.tableNumber)}`,
-    );
+    // Show success toast and redirect to employee details tab
+    toast.success(`Employee "${employee.fullName}" created successfully!`);
+    setActiveMainTab("employee-details");
   };
 
   // Handle employee status toggle
@@ -754,18 +796,30 @@ export default function HRDashboard() {
     });
   };
 
-  const handleResignationUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResignationUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
+      if (!validatePDF(file)) {
+        e.target.value = ""; // Reset input
+        return;
+      }
+
+      try {
+        toast.loading("Uploading resignation letter...");
+        const { url } = await uploadPDF(file, "resignation-letters");
         setDeactivationModal((prev) => ({
           ...prev,
-          resignationLetter: result,
+          resignationLetter: url,
         }));
-      };
-      reader.readAsDataURL(file);
+        toast.dismiss();
+        toast.success("Resignation letter uploaded successfully!");
+      } catch (error) {
+        toast.dismiss();
+        toast.error(error instanceof Error ? error.message : "Upload failed");
+        e.target.value = "";
+      }
     }
   };
 
@@ -1334,7 +1388,11 @@ Generated on: ${new Date().toLocaleString()}
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="employees" className="space-y-6">
+        <Tabs
+          value={activeMainTab}
+          onValueChange={setActiveMainTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border border-slate-700">
             <TabsTrigger
               value="employees"
@@ -1922,7 +1980,7 @@ Generated on: ${new Date().toLocaleString()}
                           <div className="relative">
                             <input
                               type="file"
-                              accept="image/*,.pdf"
+                              accept=".pdf"
                               onChange={handlePassbookUpload}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
@@ -1988,7 +2046,7 @@ Generated on: ${new Date().toLocaleString()}
                                 <div className="relative">
                                   <input
                                     type="file"
-                                    accept="image/*,.pdf,.doc,.docx"
+                                    accept=".pdf"
                                     onChange={handleDocumentUpload(docType.key)}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                   />
@@ -2841,7 +2899,7 @@ Generated on: ${new Date().toLocaleString()}
                     <div className="relative">
                       <input
                         type="file"
-                        accept="image/*,.pdf,.doc,.docx"
+                        accept=".pdf"
                         onChange={handleResignationUpload}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         required

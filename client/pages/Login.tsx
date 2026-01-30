@@ -6,43 +6,44 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import AppNav from "@/components/Navigation";
+import { userAPI, adminAPI } from "@/services/api";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
-    // Check admin credentials
-    if (username === "admin" && password === "admin") {
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userRole", "admin");
-      localStorage.setItem("currentUser", "admin");
-      navigate("/");
-    } else {
-      // Check created user credentials
-      const credentials = JSON.parse(
-        localStorage.getItem("userCredentials") || "{}",
-      );
-      if (credentials[username] && credentials[username] === password) {
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userRole", "user");
-        localStorage.setItem("currentUser", username);
-        navigate("/");
-      } else {
-        alert(
-          "Invalid credentials. Use admin/admin or a created user account.",
-        );
+    try {
+      const data = { email, password };
+      const response = isAdmin
+        ? await adminAPI.login(data)
+        : await userAPI.login(data);
+
+      // Store token and user info
+      localStorage.setItem("authToken", response.token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("userRole", response.user.role);
+
+      if (rememberMe) {
+        localStorage.setItem("rememberEmail", email);
       }
-    }
 
-    setIsLoading(false);
+      navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -74,22 +75,29 @@ export default function Login() {
               </p>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm">
+                {error}
+              </div>
+            )}
+
             {/* Login Form */}
             <form onSubmit={handleLogin} className="space-y-6">
-              {/* Username Field */}
+              {/* Email Field */}
               <div className="space-y-2">
                 <Label
-                  htmlFor="username"
+                  htmlFor="email"
                   className="text-slate-300 text-sm font-medium"
                 >
-                  Username
+                  Email
                 </Label>
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white placeholder-slate-500 h-12 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all duration-300 hover:bg-slate-700/50 hover:border-slate-600"
                   required
                 />
@@ -127,6 +135,22 @@ export default function Login() {
                 </div>
               </div>
 
+              {/* Admin Checkbox */}
+              <div className="flex items-center space-x-2 group/checkbox">
+                <Checkbox
+                  id="admin"
+                  checked={isAdmin}
+                  onCheckedChange={(checked) => setIsAdmin(checked as boolean)}
+                  className="border-slate-600 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500 transition-all duration-300 hover:border-slate-500 hover:bg-slate-700/30"
+                />
+                <Label
+                  htmlFor="admin"
+                  className="text-sm text-slate-400 cursor-pointer transition-colors duration-300 group-hover/checkbox:text-slate-300"
+                >
+                  Admin Login
+                </Label>
+              </div>
+
               {/* Remember Me */}
               <div className="flex items-center space-x-2 group/checkbox">
                 <Checkbox
@@ -162,7 +186,11 @@ export default function Login() {
             <div className="text-center mt-8">
               <p className="text-slate-400 text-sm">
                 Don't have an account?{" "}
-                <button className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                <button
+                  type="button"
+                  onClick={() => navigate("/register")}
+                  className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                >
                   Create Account
                 </button>
               </p>
