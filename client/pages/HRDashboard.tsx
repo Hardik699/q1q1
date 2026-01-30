@@ -783,6 +783,10 @@ export default function HRDashboard() {
   const handleResignationUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!validatePDF(file)) {
+        e.target.value = ""; // Reset input
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
